@@ -1,0 +1,11 @@
+openpyxl
+python-multipart
+fastapi==0.111.0
+pydantic==2.7.4
+pydantic-settings==2.3.4
+uvicorn==0.29.0
+requests
+azure-storage-blob==12.22.0
+azure-cosmos==4.7.0
+pikepdf==8.15.1
+hdbcli

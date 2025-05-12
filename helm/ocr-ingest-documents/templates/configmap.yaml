@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configmap.name }}
+  labels: {{- include "ocr-ingest-documents.labels" . | nindent 4 }}
+data:
+  auth_token_url: "{{ .Values.urls.auth_token_url }}"
+  schemas_url: "{{ .Values.urls.schemas_url }}"
+  status_url: "{{ .Values.urls.status_url }}"
+  doc_upload_url: "{{ .Values.urls.doc_upload_url }}"
+  get_clients_url: "{{ .Values.urls.get_clients_url }}"
+  port: "{{ .Values.service.port }}"
+  ocr_csv_url: "{{ .Values.urls.ocr_csv_url }}"
+  ocr_pdf_url: "{{ .Values.urls.ocr_pdf_url }}"
+  ocr_erp_push_url: "{{ .Values.urls.ocr_erp_push_url }}"
+  us_pdf_schema_id: "{{ .Values.urls.us_pdf_schema_id }}"
+  emea_pdf_schema_id: "{{ .Values.urls.emea_pdf_schema_id }}"
+  latam_pdf_schema_id: "{{ .Values.urls.latam_pdf_schema_id }}"
+  env: "{{ .Values.env }}"
