@@ -7,7 +7,7 @@ replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: vismay29/test-ocr-ingest
+  repository: placeholder/ocr-ingest-file
   # This sets the pull policy for images.
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
@@ -63,19 +63,19 @@ configmap:
   name: ocr-configmap
 
 urls:
-  auth_token_url : 'https://sandbox-kmatzhj5.authentication.us21.hana.ondemand.com/oauth/token'
+  auth_token_url : 'https://mec-ocr-prod-3r3lf574.authentication.us21.hana.ondemand.com/oauth/token'
   schemas_url : 'https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/schemas?clientId=default&scope=client'
   status_url : 'https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/document/catalog'
   doc_upload_url : 'https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/document/jobs'
   get_clients_url : 'https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/clients'
-  ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr.svc.cluster.local:8000/dev/parse/pdf'
-  ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr.svc.cluster.local:8000/dev/parse/excel'
-  ocr_erp_push_url: 'http://aiops-ocr-erp-push.ocr.svc.cluster.local:8000/dev/ocr/erp-push'
-  us_pdf_schema_id : '0562b4e4-a557-47d5-883d-fb71c73eb3e7'
-  emea_pdf_schema_id : 'f86b28c5-7da8-4604-88f9-23cab0a98311'
-  latam_pdf_schema_id: '63a2a4bd-e98a-4cad-923a-21dc9d8c3b25'
+  ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr-prod.svc.cluster.local:8000/prod/parse/pdf'
+  ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr-prod.svc.cluster.local:8000/prod/parse/excel'
+  ocr_erp_push_url: 'http://aiops-ocr-erp-push.ocr-prod.svc.cluster.local:8000/prod/ocr/erp-push'
+  us_pdf_schema_id : 'e23096df-7854-4ea8-bd33-246f8e4dcf30'
+  emea_pdf_schema_id : '9f9590b5-88e3-48e9-8e2c-38ac11a50b70'
+  latam_pdf_schema_id: 'd2b4be13-a5d2-4843-84e8-56e3a029cab1'
 
-env: 'dev'
+env: 'prod'
 
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
@@ -86,29 +86,23 @@ ingress:
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
     nginx.ingress.kubernetes.io/cors-allow-headers: 'DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization,User'
-    # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/auth-url: "http://aiops-ocr-authorizer.ocr.svc.cluster.local:8000/qa/ocr/auth"
+    #nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/auth-url: "http://aiops-ocr-authorizer.ocr-prod.svc.cluster.local:8000/prod/ocr/auth"
   className: nginx
   enabled: true
   hosts:
-  - host: api.nonprod.ocr.monsterenergy.com 
+  - host: api.ocr.monsterenergy.com 
     paths:
-    - path: /dev/ocr/ingest
+    - path: /prod/ocr/ingest
       pathType: Prefix
   tls:
   - hosts:
-    - api.nonprod.ocr.monsterenergy.com 
+    - api.ocr.monsterenergy.com 
     secretName: ocr-cert-secret 
 
 
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 200m
-    memory: 256Mi
-#resources: {}
+
+resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following

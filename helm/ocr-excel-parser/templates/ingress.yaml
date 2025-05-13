@@ -5,11 +5,10 @@ metadata:
   name: {{ include "ocr-excel-parser.fullname" . }}
   labels:
     {{- include "ocr-excel-parser.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
   annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: "10m"  # Allow 10MB request body size
-    {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
+  {{- end }}
 spec:
   {{- with .Values.ingress.className }}
   ingressClassName: {{ . }}

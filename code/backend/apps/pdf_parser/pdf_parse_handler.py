@@ -94,6 +94,7 @@ def upload_document(auth_token, upload_url, schema_id, client_id, pdf_bytes, fil
     headers = {"Authorization": f"Bearer {auth_token}"}
     response = requests.post(upload_url, data=payload, files=files, headers=headers)
     json_response = response.json()
+    logging.info(f'PDF Upload Response: {json_response}')
     job_id = json_response["id"]
     return job_id
 

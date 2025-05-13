@@ -7,7 +7,7 @@ replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: vismay29/excel-parser
+  repository: placeholder/test-excel-parser
   # This sets the pull policy for images.
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
@@ -69,7 +69,7 @@ ingress:
   hosts:
   - host: api.ocr.monsterenergy.com
     paths:
-    - path: /dev/parse/excel
+    - path: /prod/parse/excel
       pathType: Prefix
   tls:
   - hosts:
@@ -84,39 +84,32 @@ configmap:
 
 
 urls:
-  auth_token_url : 'https://sandbox-kmatzhj5.authentication.us21.hana.ondemand.com/oauth/token'
+  auth_token_url : 'https://aiops-d-z1xzs821.authentication.us10.hana.ondemand.com/oauth/token'
   schemas_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/schemas?clientId=default&scope=client'
   status_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/document/catalog'
   doc_upload_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/document/jobs'
   get_clients_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/clients'
-  ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr.svc.cluster.local:8000/parse/pdf'
-  ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr.svc.cluster.local:8000/parse/excel'
-  ocr_erp_push_url : 'http://aiops-ocr-erp-push.ocr.svc.cluster.local:8000/ocr/erp-push'
+  ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr-qa.svc.cluster.local:8000/parse/pdf'
+  ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr-qa.svc.cluster.local:8000/parse/excel'
+  ocr_erp_push_url : 'http://aiops-ocr-erp-push.ocr-qa.svc.cluster.local:8000/ocr/erp-push'
   pdf_schema_id : '0562b4e4-a557-47d5-883d-fb71c73eb3e7'
 
-env: 'dev'  
+env: 'qa'  
 
  
 
 
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 200m
-    memory: 256Mi
-
-# We usually recommend not to specify default resources and to leave this as a conscious
-# choice for the user. This also increases chances charts run on environments with little
-# resources, such as Minikube. If you do want to specify resources, uncomment the following
-# lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-# limits:
-#   cpu: 100m
-#   memory: 128Mi
-# requests:
-#   cpu: 100m
-#   memory: 128Mi
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 # livenessProbe:
@@ -131,10 +124,10 @@ resources:
 # This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
   enabled: false
-  minReplicas: 2
-  maxReplicas: 5
-  targetCPUUtilizationPercentage: 75
-  targetMemoryUtilizationPercentage: 75
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
 
 # Additional volumes on the output Deployment definition.
 volumes: []

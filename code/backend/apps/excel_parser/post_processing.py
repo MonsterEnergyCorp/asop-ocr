@@ -28,6 +28,7 @@ def process_bill_and_ship_to(header_data):
         return header_data
     
 def special_quantity_transforms(tabular_data):
+    """Special Quanitity related transforms for Cases and Eaches"""
     for i in tabular_data:
         if i.get('CasesQuantity'):
             i['Quantity'] = i.pop('CasesQuantity')
@@ -49,6 +50,7 @@ def region_specific_tabular_transforms(region, item):
     return item        
 
 def convert_date_format(date_str):
+    """"Date Time processing and conversion function """
     if isinstance(date_str, datetime):
         return date_str.strftime('%Y-%m-%d')
     # Define possible date formats

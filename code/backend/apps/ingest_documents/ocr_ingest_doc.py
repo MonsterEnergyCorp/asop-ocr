@@ -75,10 +75,8 @@ def upload_invoice_file(data: dict):
                 # Remove eml_data to avoid storing large strings in DB
                 processed_data.pop('eml_data', None)
 
-                logging.info(f'PROCESSED DATA KEYS: {data.keys()}')
             # Continue with standard processing using the processed data
             data = processed_data
-            logging.info(f'DATA KEYS: {data.keys()}')
         # Continue with existing processing flow
         file_content = decode(data)
         # Get file name, content type and sender email
@@ -198,7 +196,7 @@ def pdf_validate_push_to_storage(document_no, tmp_file, file_name, content_type,
     # Validate content_type
     file_type, error_response = get_file_type(content_type)
 
-    # Validate file size
+    # Validate file size - Can be enabled if business decides to include upper and lower size limits.
     # if not validate_file_size(tmp_file):
     #     error_response = {'message': 'Blank File Loaded'}
     # logging.info(f"Error response after file size validation: {error_response}")

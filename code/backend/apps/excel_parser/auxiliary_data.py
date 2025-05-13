@@ -1,4 +1,4 @@
-
+# File handling data mappings, anchor fields and other auxiliary items required for data processing and tranformation
 data_dimensions={
     "PODate": "date_type",
     "DlvDate": "date_type",

@@ -5,12 +5,13 @@
 replicaCount: 1
 
 image:
-  repository: vismay29/test-auth
+  repository: ocrcontreg-dgabg9ezb3dxg5fw.azurecr.io/ocr-authorizer
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
-imagePullSecrets: []
+imagePullSecrets:
+  - name: ocr-azure-registry
 nameOverride: ""
 fullnameOverride: ""
 

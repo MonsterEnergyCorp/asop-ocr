@@ -11,15 +11,7 @@ env = config.env
 logging.info(f'ENV: {env}')
 
 def init_routers(app_: FastAPI) -> None:
-    # @app_.post("/parse/excel")
-    # async def upload_excel(file: UploadFile = File(...)):
-    #     if file.content_type != 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
-    #         raise HTTPException(status_code=400, detail="Invalid file type. Please upload an Excel file.")
-
-    #     content = await file.read()
-    #     result = excel_parsing_flow(content)
-    #     return {"message": "File processed successfully", "data": result}
-    
+   
     @app_.post(f"/{env}/parse/excel")
     async def parse_val(payload: dict):
         file_id = payload.get("file_id")
