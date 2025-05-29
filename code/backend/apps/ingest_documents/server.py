@@ -11,7 +11,7 @@ env = config.env
 def init_routers(app_: FastAPI) -> None:
     @app_.post(f"/{env}/ocr/ingest")
     async def upload_pdf(data: dict):
-        if data['file_type'] not in ['application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv']:
+        if data.get('data',{}).get('file_type') not in ['application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv', 'application/octet-stream']:
             raise HTTPException(status_code=400, detail="Invalid file type.")
         result = upload_invoice_file(data)
         return {"message": "File ingested successfully", "data": result}

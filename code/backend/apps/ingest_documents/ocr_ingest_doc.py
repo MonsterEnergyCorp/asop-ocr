@@ -86,7 +86,7 @@ def upload_invoice_file(data: dict):
         file_path = env + '/' + data['region'] + '/' + file_name
             
         # Check content_type
-        content_type = data.get('file_type')
+        content_type, data = get_attachment_content_type(data)
         file_type_folder, error_response = get_file_type(content_type)
 
         if file_type_folder == 'pdf':
@@ -287,4 +287,13 @@ def fail_validation(file_name, status_message, data):
     # push to hanadb
     
     return 400, status_message
+
+
+def get_attachment_content_type(data):
+    content_type = data.get('file_type','')
+    if content_type == 'application/octet-stream':
+        file_extension = data.get('file_name', '').lower().split('.')[-1]   
+        content_type = PDF_CONTENT if file_extension == 'pdf' else CSV_CONTENT
+        data['file_type'] = content_type
+    return content_type, data
 
