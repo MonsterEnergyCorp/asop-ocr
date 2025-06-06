@@ -22,6 +22,9 @@ ocr_pdf_url = config.ocr_pdf_url
 ocr_csv_url = config.ocr_csv_url
 env = config.env
 
+class DuplicateException(Exception):
+    pass
+
 
 def upload_invoice_file(data: dict):
     """
@@ -47,7 +50,13 @@ def upload_invoice_file(data: dict):
             # Create a new data dictionary with the expected structure
             processed_data = inner_data.copy()
             processed_data['region'] = region
-            
+            processed_data['region'] = region
+            file_id = data.get('file_id','')
+            processed_data['file_id'] = file_id
+            duplicate_check = check_for_existing_process(file_id)
+            if duplicate_check:
+                raise DuplicateException
+
             # Handle eml data if present
             if inner_data.get('eml_data'):
                 eml_uuid = str(uuid.uuid4())
@@ -124,7 +133,9 @@ def upload_invoice_file(data: dict):
             tmp_file.close()
 
             return {"status_code": 200, "message" : response}
-
+    except DuplicateException:
+        logging.info(f"File already ingested in OCR")
+        return {"status_code": 400, "message" : "File already ingested in OCR"}
     except Exception as e:
         logging.error('Runtime error: ', e)
         response = {"status_code": 500, "message" : f'Error Processing request - {e}'}
@@ -184,7 +195,7 @@ def add_audit_fields(data):
     data["created_by"] = "system"
     data["created_at"] = datetime.now().strftime('%Y-%m-%d')
     data["updated_by"] = "system"
-    data["updated_at"] = datetime.now().strftime('%Y-%m-%d')
+    data["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     return data
 
 
@@ -236,6 +247,14 @@ def hana_storage_insert(data):
     logging.info(f"Result: {result}")
     logging.info("Saved")
     close_connection(connection)
+
+def check_for_existing_process(file_id):
+    connection = connect_to_db()
+    query = queries.GET_FILE_ID.format(DATABASE_NAME=db_name, COLLECTION_NAME=db_collection, FIELD_VALUE=file_id)
+    result = execute_query(connection, query, query_type="SELECT")
+    logging.info(f"Duplicate Check Result: {result}")
+    return result    
+   
 
 def validate_file_size(tmp_file):
     """

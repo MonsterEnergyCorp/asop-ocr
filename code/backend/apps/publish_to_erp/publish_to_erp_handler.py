@@ -174,7 +174,6 @@ def publish_to_erp(data: dict):
             failure_file_path = move_blob_to_failed_folder(container_client, file_path)   
         else:
             failure_file_path = "None"     
-        delete_record_from_hana(connection,file_id)
         close_connection(connection)
     except Exception as e:
         logging.info(f'Error fetching erp payload: {e}')
