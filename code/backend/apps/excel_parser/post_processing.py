@@ -84,7 +84,7 @@ def process_tabular_data(tabular_data, po_key, region):
     line_count=0
     tabular_data = sort_cust_po_in_tabular_data(tabular_data, po_key)
     for i in tabular_data:
-        if i.get(quantity_field):
+        if is_quantity_field_empty(i):
             i = {i_key: ('' if i_value is None else i_value) for i_key, i_value in i.items()}
             i["AsopNo"] = "0000000000"
             line_count += 10
@@ -122,6 +122,17 @@ def generate_addresses(header_data, address_data, address_type):
         address_val = header_data.pop(f"{address_type}To","")
         header_data[f"{address_type}Address"] = ','.join([str(i) for i in address_val if i])
     return header_data
+
+def is_quantity_field_empty(tabular_row):
+    """
+    Check if the quantity field in the tabular row is empty or not.
+    """
+    quantity = tabular_row.get("Quantity")
+    if isinstance(quantity, str):
+        return True if quantity.strip() not in ["", "0", "-"] else False
+    elif isinstance(quantity, (int, float)):
+        return True if quantity**2 == quantity else False
+    return True if quantity else False    
 
             
 def separate_region_and_zip(input_string):
