@@ -110,7 +110,15 @@ data_mapping = {
     "REQDELDATE": "DlvDate",
     "RequestedDeliveryDateDD/MM/YYYY": "DlvDate",
     "RequestedDeliveryDateDD-MM-YYYY": "DlvDate",
-    "ORDERTYPE": "SalesDocType"
+    "ORDERTYPE": "SalesDocType",
+    'CustomerPO': 'CustPo',
+    'CustomerPODate': 'PODate',
+    'MaterialNumber': 'Material',
+    'Qty': 'Quantity',
+    'ITEMNUMBER': 'Material',
+    'QUANTITY': 'Quantity',
+    "LoopID": "TemplateInd",
+    "Amount/Price": "UnitPrice"
 }
 
 keys = ['DELIVERYCONTACT-EMAIL*',
@@ -237,7 +245,27 @@ keys = ['DELIVERYCONTACT-EMAIL*',
  'ORDERTYPE',
  'RequestedDeliveryDateDD/MM/YYYY',
  'RequestedDeliveryDateDD-MM-YYYY',
- 'CustomerPO#'
+ 'CustomerPO#',
+ 'Ship-To',
+ 'Sold-To',
+ 'DocumentType',
+ 'CustomerPO',
+ 'CustomerPODate',
+ 'Plant',
+ 'MaterialNumber',
+ 'Qty',
+ 'Amount/Price',
+ 'Department',
+ 'Email:',
+ 'Company:',
+ 'ContactName:',
+ 'Address:',
+ 'SalesOrg',
+ 'ITEMNUMBER',
+ 'QUANTITY',
+ 'TOTALPRICE',
+ 'LoopID',
+ 'Amount/Price' 
  ]
 
 multi_valued = {
@@ -249,7 +277,8 @@ multi_valued = {
     "CS.": "multi_valued",
     "EA.": "multi_valued",
     "Qty": "multi_valued",
-    "CASES": "multi_valued"
+    "CASES": "multi_valued",
+    "QUANTITY": "multi_valued"
 }
 
 tabular_keys = {
@@ -260,7 +289,13 @@ tabular_keys = {
         "MatDesc",
         "CustPo",
         "DlvDate",
-        "ItemShipTo"
+        "ItemShipTo",
+        "ItemSoldTo",
+        "ItemDocType",
+        "ItemSalesOrg",
+        "ItemPODate",
+        "TemplateInd",
+        "UnitPrice"
     ]},
     "Other": {"Material": [
         "Material",
@@ -280,4 +315,15 @@ directional_biases = {'EA.': 'below',
 
 non_columnar_entry_keys = {'MATERIAL': -1, 'MATERIAL#': -3}
 
-regional_mappings = {"EMEA": {"Shipto": "ItemShipTo"}}
+regional_map_lvl1 = {'EMEA': {'Shipto': 'ItemShipTo',
+  'Sold-To': 'ItemSoldTo',
+  'Ship-To': 'ItemShipTo',
+  'DocumentType': 'ItemDocType',
+  'SalesOrg': 'ItemSalesOrg',
+  'CustomerPODate': 'ItemPODate'}}
+
+regional_map_lvl2 = {'EMEA': {'ItemShipTo': 'ShipTo',
+  'ItemSoldTo': 'SoldTo',
+  'ItemDocType': 'SalesDocType',
+  'ItemSalesOrg': 'SalesOrg',
+  'ItemPODate': 'PODate'}}

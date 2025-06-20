@@ -155,7 +155,7 @@ def erp_field_mapping(parsed_data, region):
     mapped_data={}
     if "PACKAGE" in parsed_data and "DESCRIPTION" in parsed_data:
         parsed_data.pop("DESCRIPTION")
-    regional_map = regional_mappings.get(region,{})    
+    regional_map = regional_map_lvl1.get(region,{})    
     for k,v in parsed_data.items():
         if regional_map.get(k):
             mapped_data[regional_map.get(k)]=v

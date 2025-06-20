@@ -1,6 +1,7 @@
 import logging
 import re
 from datetime import datetime
+from apps.excel_parser.auxiliary_data import *
 
 def process_bill_and_ship_to(header_data):
     """
@@ -28,7 +29,6 @@ def process_bill_and_ship_to(header_data):
         return header_data
     
 def special_quantity_transforms(tabular_data):
-    """Special Quanitity related transforms for Cases and Eaches"""
     for i in tabular_data:
         if i.get('CasesQuantity'):
             i['Quantity'] = i.pop('CasesQuantity')
@@ -44,13 +44,17 @@ def special_quantity_transforms(tabular_data):
 
 def region_specific_tabular_transforms(region, item):
     if region=="EMEA":
-        item['DlvDate'] = convert_date_format(item.get('DlvDate',""))
-        if item.get("ItemShipTo"):
-            item['ShipTo'] = item.pop("ItemShipTo")
-    return item        
+        regional_reverse_map = regional_map_lvl2.get(region, {})
+        item['DlvDate'] = convert_date_format(item['DlvDate'])
+        if item.get('ItemPODate'):
+            item['ItemPODate'] = convert_date_format(item['ItemPODate'])
+        valid_reverse_maps = [field for field in item if regional_reverse_map.get(field)]
+        if valid_reverse_maps:
+            for field in valid_reverse_maps:
+                item[regional_reverse_map[field]] = item.pop(field)
+    return item            
 
 def convert_date_format(date_str):
-    """"Date Time processing and conversion function """
     if isinstance(date_str, datetime):
         return date_str.strftime('%Y-%m-%d')
     # Define possible date formats
@@ -190,5 +194,3 @@ def post_processing_transformations(header_data, tabular_data, po_key, hana_data
 
 
     
-
-
