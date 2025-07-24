@@ -1,0 +1,1 @@
+metadata = ["poNumber", "SalesOrg", "materialNumber", "billToName", "shipToName", "quantity"]

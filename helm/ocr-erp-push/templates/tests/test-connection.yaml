@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "ocr-erp-push.fullname" . }}-test-connection"
+  labels:
+    {{- include "ocr-erp-push.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "ocr-erp-push.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never
