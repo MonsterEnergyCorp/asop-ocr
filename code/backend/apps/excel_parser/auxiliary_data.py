@@ -40,6 +40,7 @@ data_dimensions={
     "HybridCityStateZip": "singular",  # Used for POS
     "MatTextInd": "singular",  # POS
     "ShipName": "singular",  # cons market
+    "ShipToRegion": "singular"
 }
 
 data_mapping = {
@@ -145,6 +146,7 @@ data_mapping = {
     "UOM": "Uom",
 
     "BILLINGTYPE:(onlypickone)": "OrderReason",
+    "BILLING:(onlypickone)": "OrderReason",
     "OVERRIDEMATERIALDESCRIPTION": "MatTextInd",  # POS,
     "PutInformationBelow:": "NewShipToAdd",
 
@@ -184,7 +186,13 @@ data_mapping = {
     "OrderNumber": "ItemCustPo",
     "Sold-toCust": "SoldTo",
     "Sold-toName": "SoldToName",
-    "Ship-to": "ShipTo"
+    "Ship-to": "ShipTo",
+    "State:": "ShipToRegion",
+
+    "Pedido": "CustPOSuffix",  # Propimex
+    "DES.SKU": "MatDesc",
+    "ItemNumber": "Material",
+    "Quantity": "Quantity",
 
 
 
@@ -382,6 +390,7 @@ keys = ['DELIVERYCONTACT-EMAIL*',
 
  'PutInformationBelow:',  #pos
  'BILLINGTYPE:(onlypickone)',
+ 'BILLING:(onlypickone)',
  'OVERRIDEMATERIALDESCRIPTION',
 
  'Soldto:', #athlete
@@ -407,6 +416,14 @@ keys = ['DELIVERYCONTACT-EMAIL*',
  'TotalPrice',
  'QTY/PK',
  'PO#:',
+
+ 'Pedido',   #Propimex
+ 'ItemNumber',
+ 'DES.SKU',
+ 'SKUKOF',
+ 'ZONA',
+ 'Quantity',
+ 'CATEGORIA',
 
  ]
 
@@ -454,7 +471,8 @@ tabular_keys = {
         "PackQuantity",
         "ItemCustPo",
         "MatTextInd",
-        "UOM"  ]} #ARCA
+        "UOM",
+        "CustPOSuffix"  ]} #ARCA
 }
 
 directional_biases = {'EA.': 'below',

@@ -271,6 +271,9 @@ def special_template_custom_procesing(final_output, distributed_line_items, spec
         final_output_values["AddField1"] = "MASSCREATION"
         final_output_values["PODate"] = datetime.today().strftime('%Y-%m-%d')
         final_output_values["ShipTo"] = final_output_values.get("ShipTo","").split(",")[0]
+    elif special_template_type == "PROPIMEX":
+        final_output_values = list(final_output.values())[0]
+        final_output_values["AddField1"] = "MASSCREATION"        
     return final_output  
 
 
