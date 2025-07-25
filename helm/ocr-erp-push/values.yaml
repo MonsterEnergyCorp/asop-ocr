@@ -3,11 +3,11 @@
 # Declare variables to be passed into your templates.
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 1
+replicaCount: 5
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: vismay29/test-erp-push
+  repository: vismay29/erp-push-qa
   # This sets the pull policy for images.
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
@@ -74,7 +74,7 @@ urls:
   ocr_erp_push_url : 'http://aiops-ocr-erp-push.ocr.svc.cluster.local:8000/ocr/erp-push'
   pdf_schema_id : '0562b4e4-a557-47d5-883d-fb71c73eb3e7'
 
-env: 'dev'  
+env: 'qa'  
 
 ingress:
   annotations:
@@ -86,7 +86,7 @@ ingress:
   hosts:
   - host: btp-backend.dev.aiops-d.cloud
     paths:
-    - path: /dev/ocr/erp-push
+    - path: /qa/ocr/erp-push
       pathType: Prefix
   tls:
   - hosts:

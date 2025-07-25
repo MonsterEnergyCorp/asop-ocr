@@ -13,5 +13,7 @@ data:
   ocr_csv_url: "{{ .Values.urls.ocr_csv_url }}"
   ocr_pdf_url: "{{ .Values.urls.ocr_pdf_url }}"
   ocr_erp_push_url: "{{ .Values.urls.ocr_erp_push_url }}"
-  pdf_schema_id: "{{ .Values.urls.pdf_schema_id }}"
+  us_pdf_schema_id: "{{ .Values.urls.us_pdf_schema_id }}"
+  emea_pdf_schema_id: "{{ .Values.urls.emea_pdf_schema_id }}"
+  latam_pdf_schema_id: "{{ .Values.urls.latam_pdf_schema_id }}"
   env: "{{ .Values.env }}"

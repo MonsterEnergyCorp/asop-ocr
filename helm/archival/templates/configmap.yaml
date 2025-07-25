@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.configmap.name }}
-  labels:
-    {{- include "archival.labels" . | nindent 4 }}
-data:
-  ARCHIVAL_PERIOD_DAYS: "{{ .Values.ARCHIVAL_PERIOD_DAYS }}"
-  ENV: "{{ .Values.env }}"
