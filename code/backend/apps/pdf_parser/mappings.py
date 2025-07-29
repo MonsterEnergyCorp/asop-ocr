@@ -29,7 +29,9 @@ header_data = {
     "SalesOrgZip": "SalesZip",
     "documentNumber": "CustPo",
     "PODate": "PODate",
-    "soldToCountry": "CountryTemplate"
+    "soldToCountry": "CountryTemplate",
+    "ocrRegion": "Region",
+    "soldToName": "SoldToName"
       }
 
 line_item_data = {

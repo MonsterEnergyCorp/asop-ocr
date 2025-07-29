@@ -290,6 +290,11 @@ def apparels_form_check(sheet_name, region, header_data):
 
     return header_data
 
+def special_header_transforms(region, header_data):
+    if region=="LATAM":
+        header_data["Region"] = "LATAM"
+    return header_data     
+
 def post_processing_transformations(header_data, tabular_data, po_key, hana_data, region):
     """Primary post processing function to drive the transformations"""
     header_data = process_bill_and_ship_to(header_data)
@@ -298,4 +303,5 @@ def post_processing_transformations(header_data, tabular_data, po_key, hana_data
     header_data = finalize_cust_po_level(header_data, po_key)
     tabular_data = process_tabular_data(tabular_data, po_key, region)
     metadata = add_erp_metadata_information(hana_data)
+    header_data = special_header_transforms(region, header_data)
     return header_data, tabular_data, metadata
