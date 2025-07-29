@@ -227,30 +227,7 @@ def handle_manufact_code(items):
             item.pop("materialNumber", "")
     
     return items
-
-def remove_complete_duplicate_line_items(line_items, keys_to_check=None):
-    """Function to remove line item elements if they are complete duplicates"""
-
-    unique_items = {}
-    result = []
-    
-    for d in line_items:
-        # If keys_to_check is specified, only consider those keys for uniqueness
-        if keys_to_check:
-            # Create a frozenset of only the items with keys in keys_to_check
-            filtered_items = {k: d[k] for k in keys_to_check if k in d}
-            dict_key = frozenset(filtered_items.items())
-        else:
-            # Consider all items for uniqueness
-            dict_key = frozenset(d.items())
-        
-        # Only add if we haven't seen this combination of keys before
-        logging.info(f"UNIQUE ITEMS: {unique_items}\n")
-        if dict_key not in unique_items:
-            unique_items[dict_key] = True
-            result.append(d)
-    
-    return result   
+  
 
 def process_region_specific_data(data, region):
     """
@@ -270,15 +247,6 @@ def process_region_specific_data(data, region):
                 value = handle_customer_material_number(value)
                 value = handle_manufact_code(value)
                 data[key] = value
-
-    elif region == "LATAM" and isinstance(data, dict):
-        latam_items = data.get("NavHeadToItem", [])
-        logging.info(f"LATAM ITEMS: {latam_items}\n")
-        keys_to_check = ["materialNumber", "description", "quantity"]
-        line_items = remove_complete_duplicate_line_items(latam_items, keys_to_check)
-        logging.info(f"LINE ITEMS: {line_items}")
-        data["NavHeadToItem"] = line_items
-
     return data                
       
 

@@ -193,6 +193,7 @@ data_mapping = {
     "DES.SKU": "MatDesc",
     "ItemNumber": "Material",
     "Quantity": "Quantity",
+    "QTY": "Quantity" 
 
 
 
@@ -425,6 +426,9 @@ keys = ['DELIVERYCONTACT-EMAIL*',
  'Quantity',
  'CATEGORIA',
 
+ 'VENDORITEMNO.',  #argentina
+ 'QTY',
+
  ]
 
 multi_valued = {
@@ -442,6 +446,7 @@ multi_valued = {
     "Quantity": "multi_valued",  #propimex
     "OVERRIDEMATERIALDESCRIPTION": "multi_valued",
     "ORDERQTY": "multi_valued",  #cons market
+    "QTY": "multi_valued"
 }
 
 tabular_keys = {
