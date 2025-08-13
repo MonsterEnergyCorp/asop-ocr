@@ -291,8 +291,8 @@ def apparels_form_check(sheet_name, region, header_data):
     return header_data
 
 def special_header_transforms(region, header_data):
-    if region=="LATAM":
-        header_data["Region"] = "LATAM"
+    header_data['Podoctype'] = 'EXCEL'
+    header_data["Region"] = region
     return header_data     
 
 def post_processing_transformations(header_data, tabular_data, po_key, hana_data, region):

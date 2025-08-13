@@ -280,7 +280,7 @@ def output_filtering(data, region):
             # Process non-list items
             if key in header_data_mapping:
                 filtered_output[header_data_mapping[key]] = extraction_cleanups(key,value)
-
+    filtered_output["Region"] = region
     return filtered_output
 
 def extraction_cleanups(key,value):
@@ -310,6 +310,7 @@ def metadata_formatter(file_data, payload):
     metadata['Field4'] = ''
     metadata['Field5'] = ''
     payload['NavHeadtoMeta'] = [metadata]
+    payload['Podoctype'] = 'PDF'
     return payload
 
 

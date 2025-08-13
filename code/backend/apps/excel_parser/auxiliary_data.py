@@ -149,6 +149,7 @@ data_mapping = {
     "BILLING:(onlypickone)": "OrderReason",
     "OVERRIDEMATERIALDESCRIPTION": "MatTextInd",  # POS,
     "PutInformationBelow:": "NewShipToAdd",
+    "REQUESTEDDELIVERYDATE:": "DlvDate",
 
     "Soldto:": "SoldTo",  # athlete
     "OrderType:": "SalesDocType",
@@ -393,6 +394,7 @@ keys = ['DELIVERYCONTACT-EMAIL*',
  'BILLINGTYPE:(onlypickone)',
  'BILLING:(onlypickone)',
  'OVERRIDEMATERIALDESCRIPTION',
+ 'REQUESTEDDELIVERYDATE:',
 
  'Soldto:', #athlete
  'Department:',
