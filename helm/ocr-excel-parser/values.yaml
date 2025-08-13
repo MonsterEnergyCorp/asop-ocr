@@ -69,7 +69,7 @@ ingress:
   hosts:
   - host: api.ocr.monsterenergy.com
     paths:
-    - path: /dev/parse/excel
+    - path: /qa/parse/excel
       pathType: Prefix
   tls:
   - hosts:
@@ -89,12 +89,12 @@ urls:
   status_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/document/catalog'
   doc_upload_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/document/jobs'
   get_clients_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/clients'
-  ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr-dev.svc.cluster.local:8000/parse/pdf'
-  ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr-dev.svc.cluster.local:8000/parse/excel'
-  ocr_erp_push_url : 'http://aiops-ocr-erp-push.ocr-dev.svc.cluster.local:8000/ocr/erp-push'
+  ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr-qa.svc.cluster.local:8000/parse/pdf'
+  ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr-qa.svc.cluster.local:8000/parse/excel'
+  ocr_erp_push_url : 'http://aiops-ocr-erp-push.ocr-qa.svc.cluster.local:8000/ocr/erp-push'
   pdf_schema_id : '0562b4e4-a557-47d5-883d-fb71c73eb3e7'
 
-env: 'dev'  
+env: 'qa'  
 
  
 

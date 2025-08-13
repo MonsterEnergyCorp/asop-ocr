@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 1
+replicaCount: 5
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
@@ -68,14 +68,14 @@ urls:
   status_url : 'https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/document/catalog'
   doc_upload_url : 'https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/document/jobs'
   get_clients_url : 'https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/clients'
-  ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr.svc.cluster.local:8000/dev/parse/pdf'
-  ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr.svc.cluster.local:8000/dev/parse/excel'
-  ocr_erp_push_url: 'http://aiops-ocr-erp-push.ocr.svc.cluster.local:8000/dev/ocr/erp-push'
+  ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr-qa.svc.cluster.local:8000/qa/parse/pdf'
+  ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr-qa.svc.cluster.local:8000/qa/parse/excel'
+  ocr_erp_push_url: 'http://aiops-ocr-erp-push.ocr-qa.svc.cluster.local:8000/qa/ocr/erp-push'
   us_pdf_schema_id : '0562b4e4-a557-47d5-883d-fb71c73eb3e7'
   emea_pdf_schema_id : 'f965793d-7e80-476a-a222-609635449429'
   latam_pdf_schema_id: '24c2fcf4-5f1b-4a3e-bb3a-6de8e9f9bbd0'
 
-env: 'dev'
+env: 'qa'
 
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
@@ -87,28 +87,20 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
     nginx.ingress.kubernetes.io/cors-allow-headers: 'DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization,User'
     # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/auth-url: "http://aiops-ocr-authorizer.ocr.svc.cluster.local:8000/dev/ocr/auth"
+    nginx.ingress.kubernetes.io/auth-url: "http://aiops-ocr-authorizer.ocr-qa.svc.cluster.local:8000/qa/ocr/auth"
   className: nginx
   enabled: true
   hosts:
   - host: api.nonprod.ocr.monsterenergy.com 
     paths:
-    - path: /dev/ocr/ingest
+    - path: /qa/ocr/ingest
       pathType: Prefix
   tls:
   - hosts:
     - api.nonprod.ocr.monsterenergy.com 
     secretName: ocr-cert-secret 
 
-
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 200m
-    memory: 256Mi
-#resources: {}
+resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
