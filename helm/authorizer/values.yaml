@@ -5,12 +5,13 @@
 replicaCount: 3
 
 image:
-  repository: vismay29/test-auth
+  repository: ocrcontreg-dgabg9ezb3dxg5fw.azurecr.io/ocr-authorizer
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
-imagePullSecrets: []
+imagePullSecrets:
+  - name: ocr-azure-registry
 nameOverride: ""
 fullnameOverride: ""
 
@@ -54,7 +55,7 @@ urls:
   ocr_erp_push_url : 'http://aiops-ocr-erp-push.ocr.svc.cluster.local:8000/ocr/erp-push'
   pdf_schema_id : '0562b4e4-a557-47d5-883d-fb71c73eb3e7'  
 
-env: 'qa'  
+env: 'prod'  
 
 ingress:
   enabled: false

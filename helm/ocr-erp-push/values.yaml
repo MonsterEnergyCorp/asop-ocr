@@ -7,14 +7,15 @@ replicaCount: 5
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: vismay29/erp-push-qa
+  repository: ocrcontreg-dgabg9ezb3dxg5fw.azurecr.io/ocr-erp-push 
   # This sets the pull policy for images.
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets: []
+imagePullSecrets:
+  - name: ocr-azure-registry
 # This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
@@ -74,7 +75,7 @@ urls:
   ocr_erp_push_url : 'http://aiops-ocr-erp-push.ocr.svc.cluster.local:8000/ocr/erp-push'
   pdf_schema_id : '0562b4e4-a557-47d5-883d-fb71c73eb3e7'
 
-env: 'qa'  
+env: 'prod'  
 
 ingress:
   annotations:
@@ -84,13 +85,13 @@ ingress:
   className: nginx
   enabled: false
   hosts:
-  - host: btp-backend.dev.aiops-d.cloud
+  - host: api.ocr.monsterenergy.com
     paths:
-    - path: /qa/ocr/erp-push
+    - path: /prod/ocr/erp-push
       pathType: Prefix
   tls:
   - hosts:
-    - btp-backend.dev.aiops-d.cloud
+    - api.ocr.monsterenergy.com
     secretName: aiopsd-cert-secret
 
 

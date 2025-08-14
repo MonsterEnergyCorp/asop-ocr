@@ -5,10 +5,11 @@ metadata:
   name: {{ include "ocr-ingest-documents.fullname" . }}
   labels:
     {{- include "ocr-ingest-documents.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
   annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"  # Allow 10MB request body size
+    {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
 spec:
   {{- with .Values.ingress.className }}
   ingressClassName: {{ . }}

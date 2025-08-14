@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: ocr-cert-issuer
+spec:
+  acme:
+    email: abhchowdhury@deloitte.com
+    privateKeySecretRef:
+      name: ocr-cert-issuer-secret
+    server: https://acme-v02.api.letsencrypt.org/directory
+    solvers:
+    - http01:
+        ingress:
+          class: nginx

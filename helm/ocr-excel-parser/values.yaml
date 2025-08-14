@@ -3,18 +3,19 @@
 # Declare variables to be passed into your templates.
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 1
+replicaCount: 5
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: vismay29/test-excel-parser
+  repository: ocrcontreg-dgabg9ezb3dxg5fw.azurecr.io/ocr-excel-parser
   # This sets the pull policy for images.
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets: []
+imagePullSecrets:
+  - name: ocr-azure-registry
 # This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
@@ -69,7 +70,7 @@ ingress:
   hosts:
   - host: api.ocr.monsterenergy.com
     paths:
-    - path: /qa/parse/excel
+    - path: /prod/parse/excel
       pathType: Prefix
   tls:
   - hosts:
