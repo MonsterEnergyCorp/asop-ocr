@@ -73,7 +73,7 @@ urls:
   ocr_erp_push_url: 'http://aiops-ocr-erp-push.ocr-qa.svc.cluster.local:8000/qa/ocr/erp-push'
   us_pdf_schema_id : '0562b4e4-a557-47d5-883d-fb71c73eb3e7'
   emea_pdf_schema_id : 'f965793d-7e80-476a-a222-609635449429'
-  latam_pdf_schema_id: '24c2fcf4-5f1b-4a3e-bb3a-6de8e9f9bbd0'
+  latam_pdf_schema_id: '1017575d-b270-4838-9009-2f91041d9d28'
 
 env: 'qa'
 
@@ -148,3 +148,4 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
