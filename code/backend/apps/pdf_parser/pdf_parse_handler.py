@@ -93,6 +93,8 @@ def upload_document(auth_token, upload_url, schema_id, client_id, pdf_bytes, fil
     payload = { "options": json.dumps(options) }
     headers = {"Authorization": f"Bearer {auth_token}"}
     response = requests.post(upload_url, data=payload, files=files, headers=headers)
+    # logging.info(f'Upload response status: {response.status_code}')
+    # logging.info(f'Upload response text: {response.text}')
     json_response = response.json()
     job_id = json_response["id"]
     return job_id
@@ -355,6 +357,10 @@ def pdf_parsing_flow(data):
     global schema_id
     schema_id = get_schema_id(region)
     content = read_file_from_object_store(file_path)
+    # logging.info(f"Schema Id: {schema_id}")
+    # logging.info(f"Auth Token: {auth_token}")
+    # logging.info(f"Document Upload URL: {doc_upload_url}")
+    # logging.info(f"Client ID: {client_id}")
     job_id = upload_document(auth_token, doc_upload_url, schema_id, client_id, content, file_path)
     if document_status(auth_token, status_url, job_id, client_id, doc_upload_url):
         pdf_output, raw_output = parsed_results(doc_upload_url, auth_token, job_id)

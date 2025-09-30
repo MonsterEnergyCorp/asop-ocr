@@ -73,7 +73,7 @@ urls:
   ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr-prod.svc.cluster.local:8000/prod/parse/excel'
   ocr_erp_push_url: 'http://aiops-ocr-erp-push.ocr-prod.svc.cluster.local:8000/prod/ocr/erp-push'
   us_pdf_schema_id : 'e23096df-7854-4ea8-bd33-246f8e4dcf30'
-  emea_pdf_schema_id : '9f9590b5-88e3-48e9-8e2c-38ac11a50b70'
+  emea_pdf_schema_id : '58eac105-f28c-4b0f-9f46-83dd0977c5e0'
   latam_pdf_schema_id: '1017575d-b270-4838-9009-2f91041d9d28'
 
 env: 'prod'
