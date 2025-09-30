@@ -25,6 +25,42 @@ container_name = config.container_name
 db_name = config.db_name
 db_collection = config.db_collection
 
+# --- Begin of code to check Order Type for determining POS template - By Mansi on 30/09/2025 for INC0081672/ RITM0037876 ---
+# --- POS identification via ORDER TYPE (new requirement) ---
+try:
+    POS_ORDER_TYPES = {t.strip().upper() for t in getattr(config, 'pos_order_types', [])} or {'ZPOS', 'ZORP'}
+except Exception:
+    POS_ORDER_TYPES = {'ZPOS', 'ZORP'}
+
+
+def _get_order_type_from_header(header_data: dict):
+    """
+    Retrive OrderType from header_data. All possible values maintained.
+    Returns a list of normalized order types if found, else an empty list.
+    """
+    checkvariable = [
+        header_data.get('OrderType'),
+        header_data.get('Order_Type'),
+        header_data.get('Order Type'),
+        header_data.get('ORDERTYPE'),
+        header_data.get('SalesDocType'),
+    ]
+    raw = next((c for c in checkvariable if c), None)
+    if not raw:
+        return []
+    parts = str(raw).replace(';', ',').split(',')
+    return [p.strip().upper() for p in parts if p and p.strip()]
+
+
+def is_pos_order(header_data: dict) -> bool:
+    """
+    Function to return true or false if Order Type matches with the maintained list.
+    """
+    order_types = _get_order_type_from_header(header_data)
+    logging.info(f'Order Type: {order_types}')
+    return any(ot in POS_ORDER_TYPES for ot in order_types)
+# --- End of code to check Order Type for determining POS template - By Mansi on 30/09/2025 for INC0081672/ RITM0037876 ---
+
 def parse_data(wb):
     """Function to parse the data from the Excel workbook using openpyxl.
     args: wb: openpyxl.Workbook object
@@ -287,7 +323,12 @@ def distributed_line_item_check(header_data, outlier_customers, distributed_line
     Returns updated value of distributed_line_items.
     """
     logging.info(f'distributed_line_items: {distributed_line_items}')
+    # Added the if condition to check Order Type for determining POS template - By Mansi on 30/09/2025 for INC0081672/ RITM0037876
+    if not distributed_line_items and is_pos_order(header_data):
+        return True
+    # fallback for non-POS special lists (old code)
     distributed_customers = outlier_customers.get("POS",[]) + outlier_customers.get("POS_CONSUMER_MARKETING", []) + outlier_customers.get("POS_ATHLETE", [])
+    
     if not distributed_line_items:
         return True if header_data.get("SoldTo") in distributed_customers else False
     return distributed_line_items
@@ -298,11 +339,14 @@ def special_template_customers_check(header_data, region, outlier_customers, spe
     Returns template type
     """
     logging.info(f'Incoming  Special Template Type: {special_template_type}')
+    # Added the if condition to check Order Type for determining POS template - By Mansi on 30/09/2025 for INC0081672/ RITM0037876    
+    if is_pos_order(header_data):
+        return "POS"
     if not special_template_type:
         for key, value in outlier_customers.items():
             if header_data.get("SoldTo") in value:
                 return key
-    return special_template_type 
+    return special_template_type
 
 def excel_parsing_flow(file_id):
     connection = connect_to_db()
