@@ -1,13 +1,13 @@
-# Default values for ocr-pdf-parser.
+# Default values for ocr-excel-parser.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 5
+replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: vismay29/test-pdf-parse
+  repository: asmigoyal7/ocr-pdf-parser-dev
   # This sets the pull policy for images.
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
@@ -58,24 +58,6 @@ service:
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 
-secret:
-  name: ocr
-
-configmap:
-  name: ocr-configmap  
-
-urls:
-  auth_token_url : 'https://sandbox-kmatzhj5.authentication.us21.hana.ondemand.com/oauth/token'
-  schemas_url : 'https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/schemas?clientId=default&scope=client'
-  status_url : 'https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/document/catalog'
-  doc_upload_url : 'https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/document/jobs'
-  get_clients_url : 'https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/clients'
-  ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr.svc.cluster.local:8000/parse/pdf'
-  ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr.svc.cluster.local:8000/parse/excel'
-  ocr_erp_push_url : 'http://aiops-ocr-erp-push.ocr.svc.cluster.local:8000/ocr/erp-push'
-  pdf_schema_id : '0562b4e4-a557-47d5-883d-fb71c73eb3e7'
-
-env: 'qa'
 
 ingress:
   annotations:
@@ -85,14 +67,37 @@ ingress:
   className: nginx
   enabled: false
   hosts:
-  - host: btp-backend.dev.aiops-d.cloud
+  - host: api.ocr.monsterenergy.com
     paths:
-    - path: /qa/parse/pdf
+    - path: /dev/parse/pdf
       pathType: Prefix
   tls:
   - hosts:
-    - btp-backend.dev.aiops-d.cloud
+    - api.ocr.monsterenergy.com
     secretName: aiopsd-cert-secret
+
+secret:
+  name: ocr
+
+configmap:
+  name: ocr-configmap
+
+
+urls:
+  auth_token_url : 'https://aiops-d-z1xzs821.authentication.us10.hana.ondemand.com/oauth/token'
+  schemas_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/schemas?clientId=default&scope=client'
+  status_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/document/catalog'
+  doc_upload_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/document/jobs'
+  get_clients_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/clients'
+  ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr.svc.cluster.local:8000/parse/pdf'
+  ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr.svc.cluster.local:8000/parse/excel'
+  ocr_erp_push_url : 'http://aiops-ocr-erp-push.ocr.svc.cluster.local:8000/ocr/erp-push'
+  pdf_schema_id : '0562b4e4-a557-47d5-883d-fb71c73eb3e7'
+
+env: 'dev'  
+
+ 
+
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -142,3 +147,4 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+ 
