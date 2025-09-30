@@ -32,6 +32,7 @@ data_dimensions={
     "ShipStreet": "possible_singular",
     "ShipAddress": "possible_singular",
     "SalesDocType": "singular",
+    "OrderType": "singular", #++By Mansi on 30/09/2025 for INC0081672/ RITM0037876
     "SoldToName": "singular",
     "ShippingCond": "singular",
     "ItemCat": "singular",
@@ -300,6 +301,7 @@ keys = ['DELIVERYCONTACT-EMAIL*',
  'MELShip-To',
  'INTERNALORDER#',
  'OrderType',
+ 'Order Type', #++By Mansi on 30/09/2025 for INC0081672/ RITM0037876
  'State/Region',
  '(NottobeusedforCorporateorRialtoWarehouseemployees)ShippingAddress:',
  'PICKUPDATE',
