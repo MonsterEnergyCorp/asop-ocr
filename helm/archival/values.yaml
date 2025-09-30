@@ -1,0 +1,41 @@
+replicaCount: 1
+image:
+  repository: vismay29/dev-archival
+  pullPolicy: Always
+  tag: "latest"
+
+# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+  
+schedule: "0 0 * * *"
+concurrencyPolicy: Forbid
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+env: 'qa'
+ARCHIVAL_PERIOD_DAYS: "5"
+
+secret:
+  name: ocr
+
+configmap:
+  name: ocr-archival-configmap
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 8000
+

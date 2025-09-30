@@ -216,7 +216,8 @@ def pos_template_custom_process_headers(header_data, special_template_type):
         zip_details = header_data.pop("Zip", [])
         header_data["ShipZip"] = str(zip_details[0]) if zip_details else ""
 
-        header_data["ShipTo"] = header_data.pop("ShipAddress", "")
+        if ("ShipAddress" in header_data):
+            header_data["ShipTo"] = header_data.pop("ShipAddress", "")
 
         header_data["CustPo"] = header_data.pop("CustPo", "").split(',')[0]
 

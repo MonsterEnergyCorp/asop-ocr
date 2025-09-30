@@ -50,7 +50,8 @@ line_item_data = {
     "itemdeliverydate": "DlvDate",
     "documentDate": "DlvDate",
     "unitOfMeasure": "Uom",
-    "ManufactCode": "Material"
+    "ManufactCode": "Material",
+    "OCRitemNumber": "POItemNo"
 }      
 
 metadata = {"poNumber": "CustPoCc",

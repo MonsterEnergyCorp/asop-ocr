@@ -190,7 +190,7 @@ data_mapping = {
     "Ship-to": "ShipTo",
     "State:": "ShipToRegion",
 
-    "Pedido": "CustPOSuffix",  # Propimex
+    "PO": "CustPOSuffix",  # Propimex
     "DES.SKU": "MatDesc",
     "ItemNumber": "Material",
     "Quantity": "Quantity",
@@ -420,7 +420,7 @@ keys = ['DELIVERYCONTACT-EMAIL*',
  'QTY/PK',
  'PO#:',
 
- 'Pedido',   #Propimex
+ 'PO',   #Propimex
  'ItemNumber',
  'DES.SKU',
  'SKUKOF',
