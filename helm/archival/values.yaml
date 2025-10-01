@@ -23,7 +23,7 @@ resources:
     memory: 256Mi
 
 env: 'prod'
-ARCHIVAL_PERIOD_DAYS: "3"
+ARCHIVAL_PERIOD_DAYS: "20"
 
 secret:
   name: ocr
