@@ -321,32 +321,39 @@ def distributed_line_item_check(header_data, outlier_customers, distributed_line
     """
     Function to check if the customer is an outlier.
     Returns updated value of distributed_line_items.
+    POS/distributed behavior is driven ONLY by Order Type (ZPOS, ZORP).
+    Customer lists are ignored for POS determination.
     """
     logging.info(f'distributed_line_items: {distributed_line_items}')
-    # Added the if condition to check Order Type for determining POS template - By Mansi on 30/09/2025 for INC0081672/ RITM0037876
-    if not distributed_line_items and is_pos_order(header_data):
-        return True
-    # fallback for non-POS special lists (old code)
-    distributed_customers = outlier_customers.get("POS",[]) + outlier_customers.get("POS_CONSUMER_MARKETING", []) + outlier_customers.get("POS_ATHLETE", [])
-    
     if not distributed_line_items:
-        return True if header_data.get("SoldTo") in distributed_customers else False
+        return is_pos_order(header_data)  # True only for POS order types
     return distributed_line_items
 
 def special_template_customers_check(header_data, region, outlier_customers, special_template_type=None):
     """
     Function to check if the customer is an outlier.
     Returns template type
+    POS template is chosen ONLY by Order Type (ZPOS, ZORP).
+    Customer-based selection applies ONLY to non-POS templates (e.g., ARCA, PROPIMEX).
     """
+    sold_to = header_data.get("SoldTo")
     logging.info(f'Incoming  Special Template Type: {special_template_type}')
-    # Added the if condition to check Order Type for determining POS template - By Mansi on 30/09/2025 for INC0081672/ RITM0037876    
+    logging.info(f'Incoming  Sold To: {sold_to}')
+
+    # 1) POS only by Order Type (no POS customer checks at all)
     if is_pos_order(header_data):
         return "POS"
+
+    # 2) Non-POS special templates by customer list
     if not special_template_type:
-        for key, value in outlier_customers.items():
-            if header_data.get("SoldTo") in value:
+        for key, customers in outlier_customers.items():
+            if str(key).upper().startswith("POS"):
+                continue  # explicitly ignore any POS* lists
+            if sold_to in customers:
                 return key
+
     return special_template_type
+
 
 def excel_parsing_flow(file_id):
     connection = connect_to_db()
@@ -373,6 +380,7 @@ def excel_parsing_flow(file_id):
             header_data = extract_header_data(parsed_data, tabular_keys_instance)
             tabular_data = extract_tabular_data(parsed_data, tabular_keys_instance)
             special_template_type = special_template_customers_check(header_data, region, outlier_customers, special_template_type)
+            logging.info(f'Determined Special Template: {special_template_type}')
 
             header_data, tabular_data, metadata = post_processing_transformations(header_data, tabular_data, po_key, hana_data, region)   
             logging.info(f'\n processed headers: {header_data}')
