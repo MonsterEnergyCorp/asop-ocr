@@ -340,9 +340,15 @@ def special_template_customers_check(header_data, region, outlier_customers, spe
     logging.info(f'Incoming  Special Template Type: {special_template_type}')
     logging.info(f'Incoming  Sold To: {sold_to}')
 
-    # 1) POS only by Order Type (no POS customer checks at all)
+    
+    # 1) POS by Order Type, but also check POS_* customer lists
     if is_pos_order(header_data):
+        for key, customers in outlier_customers.items():
+            if str(key).upper().startswith("POS") and sold_to in customers:
+                logging.info(f'Using: {key} & {sold_to}')
+                return key
         return "POS"
+
 
     # 2) Non-POS special templates by customer list
     if not special_template_type:
