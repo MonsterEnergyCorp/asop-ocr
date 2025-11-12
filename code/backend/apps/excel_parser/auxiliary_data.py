@@ -161,7 +161,8 @@ data_mapping = {
 
     "DateOrdered:": "PODate",  # cons market
     "DateNeeded:": "DlvDate",
-    "CostCenterName:": "CostCentre",
+    #"CostCenterName:": "CostCenterName", Commented by Mansi on 11/11/2025 as is not needed
+    "CostCenterNumber:": "CostCentre",
     "InternalOrder": "InternalOrder",
     "ShiptoName:": "ShipName",
     "StreetAddress:": "ShipStreet",  # cons market
@@ -408,6 +409,7 @@ keys = ['DELIVERYCONTACT-EMAIL*',
  'DateOrdered:',   #cons market
  'DateNeeded:',
  'CostCenterName:',
+ 'CostCenterNumber:',
  'InternalOrder',
  'BUTerritory:',
  'ShiptoName:',

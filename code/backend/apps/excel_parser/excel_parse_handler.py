@@ -11,6 +11,7 @@ from core.util import *
 import logging
 import copy
 import traceback
+import re
 
 po_key = "CustPo"
 main_table_key = "Material"
@@ -59,6 +60,18 @@ def is_pos_order(header_data: dict) -> bool:
     order_types = _get_order_type_from_header(header_data)
     logging.info(f'Order Type: {order_types}')
     return any(ot in POS_ORDER_TYPES for ot in order_types)
+
+
+def extract_numeric_cost_centre(values):
+    """
+    Extract the last 6–12 digit number from a list of strings.
+    """
+    for v in reversed(values):
+        matches = re.findall(r"\b\d{6,12}\b", str(v))
+        if matches:
+            return matches[-1]
+    return ""
+
 # --- End of code to check Order Type for determining POS template - By Mansi on 30/09/2025 for INC0081672/ RITM0037876 ---
 
 def parse_data(wb):
@@ -257,6 +270,11 @@ def extract_innermost_values(obj):
 
 def header_value_extraction(key,value):
     header_val = extract_innermost_values(value)
+    # --- Begin of code to check Cost Center for Consumer Marketing template - By Mansi on 11/11/2025 for INC0081672/ RITM0037876 ---
+    # Custom logic for CostCentre     
+    if key == "CostCentre":
+        return extract_numeric_cost_centre(header_val)
+    # --- End of code to check Cost Center for Consumer Marketing template - By Mansi on 11/11/2025 for INC0081672/ RITM0037876 ---
     if data_dimensions.get(key) == "singular":
         header_val = number_check_for_integer( header_val[0]) if header_val else ''
     if data_dimensions.get(key) == "date_type":
@@ -281,6 +299,17 @@ def extract_header_data(data, tabular_keys_instance):
     for key, value in data.items():
         if key not in tabular_keys_instance.get(main_table_key):
             parsed_json[key] = header_value_extraction(key, value)
+    
+    # Fallback: if CostCentre is missing or not numeric, try ShipAddress
+    cc = parsed_json.get("CostCentre", "")
+    if not re.fullmatch(r"\d{6,12}", str(cc)):
+        for field in ("ShipAddress", "ShipTo"):
+            val = parsed_json.get(field, "")
+            match = extract_numeric_cost_centre([val])
+            if match:
+                parsed_json["CostCentre"] = match
+                break
+
     return parsed_json
 
 def extract_po_numbers(header_data, tabular_data, sheet_name):
