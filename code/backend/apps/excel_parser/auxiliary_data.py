@@ -14,13 +14,13 @@ data_dimensions={
     "city": "multi",
     "SoldTo": "singular",
     "Payer": "singular",
-    "IncoTerm": "singular",
-    "IncoTerm2": "singular",
+    # "IncoTerm": "singular", #RITM0043519-By Asmita Commenting this as it is taken as header for EMEA
+    # "IncoTerm2": "singular", #RITM0043519-By Asmita Commenting this as it is taken as header for EMEA
     "melplant#": "singular",
     "ordertype": "singular",
     "SalesOrg": "singular",
     "itemcategory": "singular",
-    "shippingcondition": "singular",
+    # "shippingcondition": "singular", #RITM0043519-By Asmita Commenting this as it is taken as header for EMEA
     "deliverylocation:": "singular",
     "podate:": "singular",
     "state/region": "multi",
@@ -34,7 +34,7 @@ data_dimensions={
     "SalesDocType": "singular",
     "OrderType": "singular", #++By Mansi on 30/09/2025 for INC0081672/ RITM0037876
     "SoldToName": "singular",
-    "ShippingCond": "singular",
+    # "ShippingCond": "singular", #RITM0043519-By Asmita Commenting this as it is taken as header for EMEA
     "ItemCat": "singular",
     "OrderReason": "singular",  # POS
 
@@ -60,6 +60,8 @@ data_mapping = {
     "MELSold-To": "SoldTo",
     "MELShip-To": "ShipTo",
     "MELBill-To": "BillTo",
+    "Incoterm1" : "IncoTerm", #RITM0043519-By Asmita to add new fields in EMEA template
+    "Incoterm2" : "IncoTerm2", #RITM0043519-By Asmita to add new fields in EMEA template
     "IncoTerm:": "IncoTerm",
     "IncoTerm2:": "IncoTerm2",
     "SalesOrg:": "SalesOrg",
@@ -232,6 +234,9 @@ keys = ['DELIVERYCONTACT-EMAIL*',
  'Name:',
  '*SHIPTO/PICKUPADDRESS',
  'IncoTerm:',
+ 'Incoterm1', #RITM0043519-By Asmita to add new fields in EMEA template
+ 'Incoterm2', #RITM0043519-By Asmita to add new fields in EMEA template
+ 'comment', #RITM0043519-By Asmita to add new fields in EMEA template
  '*UNIT/SUITE/APT,ETC',
  'DeliveryLocation:',
  'SHIPTO/PICKUP-CONTACT&ADDRESS',
@@ -469,7 +474,10 @@ tabular_keys = {
         "ItemSalesOrg",
         "ItemPODate",
         "TemplateInd",
-        "UnitPrice"
+        "UnitPrice",
+        "ShippingCond", #RITM0043519-By Asmita to add new fields in EMEA template
+        "IncoTerm", #RITM0043519-By Asmita to add new fields in EMEA template
+        "IncoTerm2" #RITM0043519-By Asmita to add new fields in EMEA template
     ]},
     "Other": {"Material": [
         "Material",
