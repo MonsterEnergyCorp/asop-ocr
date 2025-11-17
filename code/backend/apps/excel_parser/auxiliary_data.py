@@ -32,6 +32,7 @@ data_dimensions={
     "ShipStreet": "possible_singular",
     "ShipAddress": "possible_singular",
     "SalesDocType": "singular",
+    "OrderType": "singular", #++By Mansi on 30/09/2025 for INC0081672/ RITM0037876
     "SoldToName": "singular",
     "ShippingCond": "singular",
     "ItemCat": "singular",
@@ -160,7 +161,8 @@ data_mapping = {
 
     "DateOrdered:": "PODate",  # cons market
     "DateNeeded:": "DlvDate",
-    "CostCenterName:": "CostCentre",
+    #"CostCenterName:": "CostCenterName", Commented by Mansi on 11/11/2025 as is not needed
+    "CostCenterNumber:": "CostCentre",
     "InternalOrder": "InternalOrder",
     "ShiptoName:": "ShipName",
     "StreetAddress:": "ShipStreet",  # cons market
@@ -300,6 +302,7 @@ keys = ['DELIVERYCONTACT-EMAIL*',
  'MELShip-To',
  'INTERNALORDER#',
  'OrderType',
+ 'Order Type', #++By Mansi on 30/09/2025 for INC0081672/ RITM0037876
  'State/Region',
  '(NottobeusedforCorporateorRialtoWarehouseemployees)ShippingAddress:',
  'PICKUPDATE',
@@ -406,6 +409,7 @@ keys = ['DELIVERYCONTACT-EMAIL*',
  'DateOrdered:',   #cons market
  'DateNeeded:',
  'CostCenterName:',
+ 'CostCenterNumber:',
  'InternalOrder',
  'BUTerritory:',
  'ShiptoName:',

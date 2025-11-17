@@ -11,6 +11,7 @@ from core.util import *
 import logging
 import copy
 import traceback
+import re
 
 po_key = "CustPo"
 main_table_key = "Material"
@@ -24,6 +25,54 @@ account_url = config.account_url
 container_name = config.container_name
 db_name = config.db_name
 db_collection = config.db_collection
+
+# --- Begin of code to check Order Type for determining POS template - By Mansi on 30/09/2025 for INC0081672/ RITM0037876 ---
+# --- POS identification via ORDER TYPE (new requirement) ---
+try:
+    POS_ORDER_TYPES = {t.strip().upper() for t in getattr(config, 'pos_order_types', [])} or {'ZPOS', 'ZORP'}
+except Exception:
+    POS_ORDER_TYPES = {'ZPOS', 'ZORP'}
+
+
+def _get_order_type_from_header(header_data: dict):
+    """
+    Retrive OrderType from header_data. All possible values maintained.
+    Returns a list of normalized order types if found, else an empty list.
+    """
+    checkvariable = [
+        header_data.get('OrderType'),
+        header_data.get('Order_Type'),
+        header_data.get('Order Type'),
+        header_data.get('ORDERTYPE'),
+        header_data.get('SalesDocType'),
+    ]
+    raw = next((c for c in checkvariable if c), None)
+    if not raw:
+        return []
+    parts = str(raw).replace(';', ',').split(',')
+    return [p.strip().upper() for p in parts if p and p.strip()]
+
+
+def is_pos_order(header_data: dict) -> bool:
+    """
+    Function to return true or false if Order Type matches with the maintained list.
+    """
+    order_types = _get_order_type_from_header(header_data)
+    logging.info(f'Order Type: {order_types}')
+    return any(ot in POS_ORDER_TYPES for ot in order_types)
+
+
+def extract_numeric_cost_centre(values):
+    """
+    Extract the last 6–12 digit number from a list of strings.
+    """
+    for v in reversed(values):
+        matches = re.findall(r"\b\d{6,12}\b", str(v))
+        if matches:
+            return matches[-1]
+    return ""
+
+# --- End of code to check Order Type for determining POS template - By Mansi on 30/09/2025 for INC0081672/ RITM0037876 ---
 
 def parse_data(wb):
     """Function to parse the data from the Excel workbook using openpyxl.
@@ -221,6 +270,11 @@ def extract_innermost_values(obj):
 
 def header_value_extraction(key,value):
     header_val = extract_innermost_values(value)
+    # --- Begin of code to check Cost Center for Consumer Marketing template - By Mansi on 11/11/2025 for INC0081672/ RITM0037876 ---
+    # Custom logic for CostCentre     
+    if key == "CostCentre":
+        return extract_numeric_cost_centre(header_val)
+    # --- End of code to check Cost Center for Consumer Marketing template - By Mansi on 11/11/2025 for INC0081672/ RITM0037876 ---
     if data_dimensions.get(key) == "singular":
         header_val = number_check_for_integer( header_val[0]) if header_val else ''
     if data_dimensions.get(key) == "date_type":
@@ -245,6 +299,17 @@ def extract_header_data(data, tabular_keys_instance):
     for key, value in data.items():
         if key not in tabular_keys_instance.get(main_table_key):
             parsed_json[key] = header_value_extraction(key, value)
+    
+    # Fallback: if CostCentre is missing or not numeric, try ShipAddress
+    cc = parsed_json.get("CostCentre", "")
+    if not re.fullmatch(r"\d{6,12}", str(cc)):
+        for field in ("ShipAddress", "ShipTo"):
+            val = parsed_json.get(field, "")
+            match = extract_numeric_cost_centre([val])
+            if match:
+                parsed_json["CostCentre"] = match
+                break
+
     return parsed_json
 
 def extract_po_numbers(header_data, tabular_data, sheet_name):
@@ -285,24 +350,45 @@ def distributed_line_item_check(header_data, outlier_customers, distributed_line
     """
     Function to check if the customer is an outlier.
     Returns updated value of distributed_line_items.
+    POS/distributed behavior is driven ONLY by Order Type (ZPOS, ZORP).
+    Customer lists are ignored for POS determination.
     """
     logging.info(f'distributed_line_items: {distributed_line_items}')
-    distributed_customers = outlier_customers.get("POS",[]) + outlier_customers.get("POS_CONSUMER_MARKETING", []) + outlier_customers.get("POS_ATHLETE", [])
     if not distributed_line_items:
-        return True if header_data.get("SoldTo") in distributed_customers else False
+        return is_pos_order(header_data)  # True only for POS order types
     return distributed_line_items
 
 def special_template_customers_check(header_data, region, outlier_customers, special_template_type=None):
     """
     Function to check if the customer is an outlier.
     Returns template type
+    POS template is chosen ONLY by Order Type (ZPOS, ZORP).
+    Customer-based selection applies ONLY to non-POS templates (e.g., ARCA, PROPIMEX).
     """
+    sold_to = header_data.get("SoldTo")
     logging.info(f'Incoming  Special Template Type: {special_template_type}')
-    if not special_template_type:
-        for key, value in outlier_customers.items():
-            if header_data.get("SoldTo") in value:
+    logging.info(f'Incoming  Sold To: {sold_to}')
+
+    
+    # 1) POS by Order Type, but also check POS_* customer lists
+    if is_pos_order(header_data):
+        for key, customers in outlier_customers.items():
+            if str(key).upper().startswith("POS") and sold_to in customers:
+                logging.info(f'Using: {key} & {sold_to}')
                 return key
-    return special_template_type 
+        return "POS"
+
+
+    # 2) Non-POS special templates by customer list
+    if not special_template_type:
+        for key, customers in outlier_customers.items():
+            if str(key).upper().startswith("POS"):
+                continue  # explicitly ignore any POS* lists
+            if sold_to in customers:
+                return key
+
+    return special_template_type
+
 
 def excel_parsing_flow(file_id):
     connection = connect_to_db()
@@ -329,6 +415,7 @@ def excel_parsing_flow(file_id):
             header_data = extract_header_data(parsed_data, tabular_keys_instance)
             tabular_data = extract_tabular_data(parsed_data, tabular_keys_instance)
             special_template_type = special_template_customers_check(header_data, region, outlier_customers, special_template_type)
+            logging.info(f'Determined Special Template: {special_template_type}')
 
             header_data, tabular_data, metadata = post_processing_transformations(header_data, tabular_data, po_key, hana_data, region)   
             logging.info(f'\n processed headers: {header_data}')
