@@ -2,7 +2,7 @@ import json, pikepdf, requests, os, tempfile, uuid, logging, base64
 from datetime import datetime
 from fastapi import UploadFile, HTTPException
 from core.azure_storage.blob_storage_connection import *
-from core.constants import SUPPORTED_FILE_TYPES, PDF_CONTENT, CSV_CONTENT, MIN_FILE_SIZE_BYTES, PROCESSING_STATUS, SUPPORTED_REGIONS
+from core.constants import SUPPORTED_FILE_TYPES, PDF_CONTENT, CSV_CONTENT, HTML_CONTENT, SPREADSHEET_CONTENT, MIN_FILE_SIZE_BYTES, PROCESSING_STATUS, SUPPORTED_REGIONS
 from core.db.query import execute_query
 from core.db.connection import *
 from core.db import queries
@@ -20,6 +20,9 @@ db_name = config.db_name
 db_collection = config.db_collection
 ocr_pdf_url = config.ocr_pdf_url
 ocr_csv_url = config.ocr_csv_url
+ocr_latam_template_url = config.ocr_latam_template_url
+ocr_latam_csv_url = config.ocr_latam_csv_url
+ocr_latam_html_url = config.ocr_latam_html_url
 env = config.env
 
 class DuplicateException(Exception):
@@ -113,7 +116,7 @@ def upload_invoice_file(data: dict):
             tmp_file.close()
 
 
-        if file_type_folder == 'csv':
+        if file_type_folder in ['spreadsheet', 'csv', 'html']:
             # Call invoice_template_processor function
             tmp_file = tempfile.NamedTemporaryFile(mode='w+b')
             tmp_file.write(file_content)
@@ -131,7 +134,13 @@ def upload_invoice_file(data: dict):
             }
             data=add_audit_fields(data)
             hana_storage_insert(data)
-            push_to_parsers(ocr_csv_url, document_no)
+            parser_url = {
+                'spreadsheet': ocr_csv_url,
+                'csv': ocr_latam_csv_url or ocr_latam_template_url,
+                'html': ocr_latam_html_url or ocr_latam_template_url
+            }.get(file_type_folder)
+            if parser_url:
+                push_to_parsers(parser_url, document_no)
             tmp_file.close()
 
             return {"status_code": 200, "message" : response}
@@ -192,6 +201,10 @@ def get_file_type(content_type):
         return 'pdf', None
     if content_type in CSV_CONTENT:
         return 'csv', None
+    if content_type in HTML_CONTENT:
+        return 'html', None
+    if content_type in SPREADSHEET_CONTENT:
+        return 'spreadsheet', None
 
 def add_audit_fields(data):
     data["created_by"] = "system"

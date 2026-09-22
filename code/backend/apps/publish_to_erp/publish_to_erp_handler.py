@@ -171,7 +171,7 @@ def publish_to_erp(data: dict):
         if hana_data["file_type"] == "application/pdf":
             po_no = hana_data.get("po_numbers")
             status, failures = pdf_call_to_erp(payload, po_no, content)
-        elif hana_data["file_type"] in CSV_CONTENT:
+        elif hana_data["file_type"] in [*CSV_CONTENT, *SPREADSHEET_CONTENT, *HTML_CONTENT]:
             status, failures = excel_call_to_erp(payload, content, hana_data)
         if failures:
             container_client = connect_to_blob_storage(sas_token, account_url, container_name)

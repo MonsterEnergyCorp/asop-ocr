@@ -1,9 +1,12 @@
 import os
+from pathlib import Path
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 import json
 import logging
 load_dotenv()
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 
 
 class Config(BaseSettings):
@@ -26,6 +29,9 @@ class Config(BaseSettings):
     port: int = os.getenv("PORT") or 8000
     ocr_pdf_url: str = os.getenv("ocr_pdf_url") or ''
     ocr_csv_url: str = os.getenv("ocr_csv_url") or ''
+    ocr_latam_template_url: str = os.getenv("ocr_latam_template_url") or ''
+    ocr_latam_csv_url: str = os.getenv("ocr_latam_csv_url") or ''
+    ocr_latam_html_url: str = os.getenv("ocr_latam_html_url") or ''
     ocr_erp_push_url: str = os.getenv("ocr_erp_push_url") or ''
     api_auth_username: str = os.getenv("api_auth_username", "") or ''
     api_auth_password: str = os.getenv("api_auth_password", "") or ''
@@ -37,5 +43,9 @@ class Config(BaseSettings):
     odata_password: str = os.getenv("odata_pwd") or ''
     archival_period_days: int = int(os.getenv("ARCHIVE_PERIOD_DAYS", 10))
     env: str = os.getenv("env") or 'dev'
-    
+    template_parser_test_mode: bool = os.getenv("TEMPLATE_PARSER_TEST_MODE", "true").lower() == "true"
+    # when true, csv/html parsing flows skip HANA, blob storage and ERP entirely and use core/local_test_storage.py instead
+    local_test_mode: bool = os.getenv("LOCAL_TEST_MODE", "false").lower() == "true"
+    local_test_storage_dir: str = os.getenv("LOCAL_TEST_STORAGE_DIR") or str(REPOSITORY_ROOT / "tools" / "local_test_storage")
+
 config = Config()

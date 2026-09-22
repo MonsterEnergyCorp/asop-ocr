@@ -1,0 +1,69 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Debug: LATAM CSV parser (local file)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/tools/debug_parse_local.py",
+            "args": [
+                "--type", "csv",
+                "--file", "${workspaceFolder}/sample_inputs/latam/csv/Cargas Masivas_20-07-2026_Loginsa.csv"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Debug: LATAM HTML parser (local file)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/tools/debug_parse_local.py",
+            "args": [
+                "--type", "html",
+                "--file", "${workspaceFolder}/sample_inputs/latam/html/OCBD0125252.html"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Debug: LATAM parser unit tests",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "unittest",
+            "args": [
+                "discover", "-s", "tests", "-p", "test_latam_template_parser.py"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Debug: CSV parser FastAPI service (needs .env)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "apps.csv_parser.server:app",
+                "--reload",
+                "--port", "8001"
+            ],
+            "cwd": "${workspaceFolder}/code/backend",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Debug: HTML parser FastAPI service (needs .env)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "apps.html_parser.server:app",
+                "--reload",
+                "--port", "8002"
+            ],
+            "cwd": "${workspaceFolder}/code/backend",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

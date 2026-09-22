@@ -5,13 +5,14 @@ from fastapi import HTTPException
 from apps.ingest_documents.ocr_ingest_doc import upload_invoice_file
 from typing import List
 from core.config import config
+from core.constants import SUPPORTED_FILE_TYPES
 
 env = config.env
 
 def init_routers(app_: FastAPI) -> None:
     @app_.post(f"/{env}/ocr/ingest")
     async def upload_pdf(data: dict):
-        if data.get('data',{}).get('file_type') not in ['application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv', 'application/octet-stream', 'application/vnd.ms-excel.sheet.macroenabled.12']:
+        if data.get('data',{}).get('file_type') not in SUPPORTED_FILE_TYPES:
             raise HTTPException(status_code=400, detail="Invalid file type.")
         result = upload_invoice_file(data)
         return {"message": "File processed successfully", "data": result}
