@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include \"ocr-csv-parser.fullname\" . }}-test-connection"
+  labels:
+    {{- include "ocr-csv-parser.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: wget
+      image: busybox:1.36
+      command: ['wget']
+      args: ['{{ include "ocr-csv-parser.fullname" . }}:{{ .Values.service.port }}/']

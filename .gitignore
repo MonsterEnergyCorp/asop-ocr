@@ -12,6 +12,7 @@ env/
 .env
 .env.*
 !.env.example
+reference_docs/
 
 # Local parser/debug outputs
 html-output.json

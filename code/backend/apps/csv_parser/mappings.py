@@ -3,6 +3,7 @@ OCR_ITEM_NO_START = 10
 REGION = "LATAM"
 PODOCTYPE = "CSV"
 
+# Aliases allow the parser to accept the descriptive LATAM headers and shorter variants.
 COLUMN_ALIASES = {
     "tipo": ["TIPO"],
     "folio": ["FOLIO"],

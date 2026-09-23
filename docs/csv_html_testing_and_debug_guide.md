@@ -416,7 +416,7 @@ If the email points to production ERP, do not use it for this enhancement until 
 
 ## Deployment Readiness
 
-Current code adds parser logic, but deployment packaging still needs to be completed before a real Kubernetes deployment.
+CSV/HTML parser deployment packaging is now present, but client-specific registry, namespace, URL, Secret, and ConfigMap values still need to be supplied before a real Kubernetes deployment.
 
 Existing repo has Dockerfiles and Helm charts for:
 
@@ -429,7 +429,7 @@ archival
 authorizer
 ```
 
-CSV/HTML deployment still needs:
+CSV/HTML deployment files now include:
 
 ```text
 build/Dockerfile.csv-parser
@@ -443,9 +443,12 @@ Also configure these environment variables in Kubernetes ConfigMap/Secret:
 ```text
 ocr_latam_csv_url
 ocr_latam_html_url
+ocr_latam_template_url
 TEMPLATE_PARSER_TEST_MODE
 LOCAL_TEST_MODE
 ```
+
+The default values intentionally leave the CSV/HTML service URLs blank until the client confirms the Kyma namespace and release names. Do not guess or copy production URLs into a test environment.
 
 For deployed environments:
 
@@ -989,15 +992,22 @@ Do not set `TEMPLATE_PARSER_TEST_MODE=false` until the payload has been approved
 
 ## Current Safe Conclusion
 
-The CSV/HTML parser logic is locally validated for the provided LATAM samples.
+The CSV/HTML parser logic and deployment packaging are present for the provided LATAM samples.
 
-Before production use, still complete:
+Before production use, complete the client-environment steps in:
 
 ```text
-1. Payload review against final ERP schema.
-2. Dockerfile creation for csv_parser/html_parser.
-3. Helm chart creation for csv_parser/html_parser.
-4. DEV/UAT deployment with TEMPLATE_PARSER_TEST_MODE=true.
-5. HANA payload verification.
-6. Approval before ERP push is enabled.
+docs/csv_html_deployment_runbook.md
+```
+
+The remaining work is environment-specific:
+
+```text
+1. Set client registry and image tags.
+2. Set client Kyma namespace and internal parser URLs.
+3. Provision approved HANA and Blob Secrets.
+4. Deploy to DEV/UAT with TEMPLATE_PARSER_TEST_MODE=true.
+5. Verify HANA payload and Blob flow.
+6. Obtain payload approval.
+7. Enable ERP push only through the approved release process.
 ```

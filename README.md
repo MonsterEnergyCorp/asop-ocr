@@ -338,13 +338,27 @@ html_parsing_flow()
 
 ## Deployment Notes
 
-CSV/HTML parser logic is present, but deployment packaging still needs dedicated Docker/Helm work before Kubernetes deployment:
+CSV/HTML deployment packaging is now present:
 
 ```text
 build/Dockerfile.csv-parser
 build/Dockerfile.html-parser
 helm/ocr-csv-parser/
 helm/ocr-html-parser/
+```
+
+Before deployment, set the client-specific internal service URLs in:
+
+```text
+helm/ocr-ingest-documents/values.yaml
+```
+
+Configure:
+
+```text
+ocr_latam_csv_url
+ocr_latam_html_url
+ocr_latam_template_url
 ```
 
 For safe DEV/UAT rollout, keep ERP push disabled first:
@@ -365,4 +379,10 @@ Full implementation and testing notes are available in:
 
 ```text
 docs/csv_html_testing_and_debug_guide.md
+```
+
+Deployment runbook:
+
+```text
+docs/csv_html_deployment_runbook.md
 ```

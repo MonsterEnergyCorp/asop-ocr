@@ -126,6 +126,7 @@ def transform_csv_rows(reader, columns):
 
 
 def parse_latam_csv(content, file_data=None):
+    # Normalize rows into the ERP-style header and line-item contract.
     file_data = file_data or {}
     text = decode_csv_bytes(content)
     reader = csv.DictReader(io.StringIO(text), delimiter=detect_csv_separator(text))
@@ -172,6 +173,7 @@ def update_processed_values(data):
 def csv_parsing_flow(file_id):
     from core.config import config
 
+    # Local mode is deliberately isolated from client HANA, Blob, and ERP resources.
     if config.local_test_mode:
         from core.local_test_storage import local_erp_data_fetch, local_read_file, local_hana_storage_push
         hana_data = local_erp_data_fetch(file_id)
@@ -183,6 +185,7 @@ def csv_parsing_flow(file_id):
     from core.db.connection import close_connection, connect_to_db
     from core.util import erp_data_fetch, hana_storage_push, push_to_erp, read_file_from_object_store
 
+    # Production path: HANA supplies metadata and Blob supplies the original bytes.
     connection = connect_to_db()
     try:
         hana_data = erp_data_fetch(connection, file_id)
@@ -190,6 +193,7 @@ def csv_parsing_flow(file_id):
         final_output = parse_latam_csv(content, hana_data)
         hana_storage_push(file_id, connection, update_processed_values(final_output))
         close_connection(connection)
+        # ERP publishing is opt-in after the DEV/UAT payload review.
         if not config.template_parser_test_mode:
             push_to_erp(config.ocr_erp_push_url, file_id)
         return final_output

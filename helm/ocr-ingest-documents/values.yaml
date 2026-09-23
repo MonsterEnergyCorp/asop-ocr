@@ -71,10 +71,17 @@ urls:
   get_clients_url : 'https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/clients'
   ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr-prod.svc.cluster.local:8000/prod/parse/pdf'
   ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr-prod.svc.cluster.local:8000/prod/parse/excel'
+  ocr_latam_csv_url : ''
+  ocr_latam_html_url : ''
+  ocr_latam_template_url : ''
   ocr_erp_push_url: 'http://aiops-ocr-erp-push.ocr-prod.svc.cluster.local:8000/prod/ocr/erp-push'
   us_pdf_schema_id : 'e23096df-7854-4ea8-bd33-246f8e4dcf30'
   emea_pdf_schema_id : '58eac105-f28c-4b0f-9f46-83dd0977c5e0'
   latam_pdf_schema_id: '1017575d-b270-4838-9009-2f91041d9d28'
+
+test_flags:
+  template_parser_test_mode: 'true'
+  local_test_mode: 'false'
 
 env: 'prod'
 

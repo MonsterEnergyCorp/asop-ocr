@@ -6,13 +6,16 @@ import json
 import logging
 load_dotenv()
 
+# Resolve local test output relative to the repository, regardless of launch directory.
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 
 
 class Config(BaseSettings):
+    # Azure Blob credentials are injected by the deployment environment.
     sas_token: str = os.getenv("blob_sas_token") or ''
     account_url: str = os.getenv("blob_container_url") or ''
     container_name: str = os.getenv("blob_container_name") or ''
+    # HANA connection values are injected through the client environment Secret.
     db_name: str = os.getenv("HANA_USERNAME") or ''
     db_collection: str = os.getenv("HANA_DB_COLLECTION") or ''
     hana_address: str = os.getenv("HANA_ADDRESS") or ''
@@ -27,6 +30,7 @@ class Config(BaseSettings):
     doc_upload_url: str = os.getenv("doc_upload_url") or ''
     get_clients_url: str = os.getenv("get_clients_url") or ''
     port: int = os.getenv("PORT") or 8000
+    # Parser and downstream service URLs are supplied by the environment ConfigMap.
     ocr_pdf_url: str = os.getenv("ocr_pdf_url") or ''
     ocr_csv_url: str = os.getenv("ocr_csv_url") or ''
     ocr_latam_template_url: str = os.getenv("ocr_latam_template_url") or ''
@@ -43,8 +47,9 @@ class Config(BaseSettings):
     odata_password: str = os.getenv("odata_pwd") or ''
     archival_period_days: int = int(os.getenv("ARCHIVE_PERIOD_DAYS", 10))
     env: str = os.getenv("env") or 'dev'
+    # Keep ERP disabled by default for local and first-pass parser validation.
     template_parser_test_mode: bool = os.getenv("TEMPLATE_PARSER_TEST_MODE", "true").lower() == "true"
-    # when true, csv/html parsing flows skip HANA, blob storage and ERP entirely and use core/local_test_storage.py instead
+    # Local mode replaces HANA and Blob with core/local_test_storage.py.
     local_test_mode: bool = os.getenv("LOCAL_TEST_MODE", "false").lower() == "true"
     local_test_storage_dir: str = os.getenv("LOCAL_TEST_STORAGE_DIR") or str(REPOSITORY_ROOT / "tools" / "local_test_storage")
 

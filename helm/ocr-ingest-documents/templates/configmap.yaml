@@ -4,6 +4,7 @@ metadata:
   name: {{ .Values.configmap.name }}
   labels: {{- include "ocr-ingest-documents.labels" . | nindent 4 }}
 data:
+  # External SAP OCR and internal parser URLs are environment-specific.
   auth_token_url: "{{ .Values.urls.auth_token_url }}"
   schemas_url: "{{ .Values.urls.schemas_url }}"
   status_url: "{{ .Values.urls.status_url }}"
@@ -12,8 +13,14 @@ data:
   port: "{{ .Values.service.port }}"
   ocr_csv_url: "{{ .Values.urls.ocr_csv_url }}"
   ocr_pdf_url: "{{ .Values.urls.ocr_pdf_url }}"
+  ocr_latam_csv_url: "{{ .Values.urls.ocr_latam_csv_url }}"
+  ocr_latam_html_url: "{{ .Values.urls.ocr_latam_html_url }}"
+  ocr_latam_template_url: "{{ .Values.urls.ocr_latam_template_url }}"
   ocr_erp_push_url: "{{ .Values.urls.ocr_erp_push_url }}"
   us_pdf_schema_id: "{{ .Values.urls.us_pdf_schema_id }}"
   emea_pdf_schema_id: "{{ .Values.urls.emea_pdf_schema_id }}"
   latam_pdf_schema_id: "{{ .Values.urls.latam_pdf_schema_id }}"
+  # Keep ERP publishing disabled during initial DEV/UAT validation.
+  TEMPLATE_PARSER_TEST_MODE: "{{ .Values.test_flags.template_parser_test_mode }}"
+  LOCAL_TEST_MODE: "{{ .Values.test_flags.local_test_mode }}"
   env: "{{ .Values.env }}"

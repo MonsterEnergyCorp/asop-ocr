@@ -1,0 +1,26 @@
+FROM python:3.12-slim
+
+# Build the CSV parser as an independent Kyma/Kubernetes service.
+WORKDIR /code
+
+COPY /code/dependencies/requirements.txt /code/requirements.txt
+
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+COPY /code/backend/apps/csv_parser /code/apps/csv_parser
+COPY /code/backend/core /code/core
+COPY /code/backend/main.py /code/main.py
+COPY /code/backend/logging.conf /code/logging.conf
+
+RUN addgroup --system appgroup && adduser --system appuser && \
+    chown -R appuser:appgroup /code
+
+USER appuser
+
+ENV PYTHONPATH=/code
+ENV FAST_API_APP_PATH=apps.csv_parser.server:app
+
+EXPOSE 8000
+
+CMD ["python", "main.py"]

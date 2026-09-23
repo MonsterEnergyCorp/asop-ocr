@@ -10,6 +10,7 @@ env = config.env
 
 
 def init_routers(app_: FastAPI) -> None:
+    # Ingest calls this endpoint with a file_id after storing the file in Blob Storage.
     @app_.post(f"/{env}/parse/csv")
     async def parse_csv(payload: dict):
         file_id = payload.get("file_id")
@@ -18,6 +19,7 @@ def init_routers(app_: FastAPI) -> None:
         result = csv_parsing_flow(file_id)
         return {"message": "File processed successfully", "data": result}
 
+    # Kubernetes probes and Helm smoke tests use this health endpoint.
     @app_.get("/")
     async def health_check():
         return {"message": "Application is healthy and running", "data": "None"}

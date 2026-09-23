@@ -134,6 +134,7 @@ def upload_invoice_file(data: dict):
             }
             data=add_audit_fields(data)
             hana_storage_insert(data)
+            # Route spreadsheets to the existing Excel parser and LATAM text templates to the new services.
             parser_url = {
                 'spreadsheet': ocr_csv_url,
                 'csv': ocr_latam_csv_url or ocr_latam_template_url,
