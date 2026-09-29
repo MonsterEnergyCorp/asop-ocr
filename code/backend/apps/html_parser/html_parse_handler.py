@@ -14,6 +14,50 @@ def clean_text(value):
     return text.strip(" :")
 
 
+def normalize_date(value):
+    date_text = clean_text(value)
+    if not date_text:
+        return ""
+
+    iso_text = date_text.replace("Z", "+00:00")
+    try:
+        return datetime.fromisoformat(iso_text).strftime("%Y-%m-%d")
+    except ValueError:
+        pass
+
+    for date_format in ("%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(date_text, date_format).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+
+    normalized_text = unicodedata.normalize("NFKD", date_text)
+    normalized_text = normalized_text.encode("ascii", "ignore").decode().lower()
+    spanish_months = {
+        "enero": 1,
+        "febrero": 2,
+        "marzo": 3,
+        "abril": 4,
+        "mayo": 5,
+        "junio": 6,
+        "julio": 7,
+        "agosto": 8,
+        "septiembre": 9,
+        "setiembre": 9,
+        "octubre": 10,
+        "noviembre": 11,
+        "diciembre": 12,
+    }
+    match = re.fullmatch(r"(\d{1,2})/([a-z]+)/((?:19|20)\d{2})", normalized_text)
+    if match:
+        day, month_name, year = match.groups()
+        month = spanish_months.get(month_name)
+        if month:
+            return datetime(int(year), month, int(day)).strftime("%Y-%m-%d")
+
+    raise ValueError(f"Unsupported date value: {date_text}")
+
+
 def normalize_header(value):
     text = unicodedata.normalize("NFKD", str(value))
     text = text.encode("ascii", "ignore").decode()
@@ -79,7 +123,7 @@ def extract_between(text, start, end):
     return clean_text(match.group(1)) if match else ""
 
 
-def extract_items(tables):
+def extract_items(tables, asop_no):
     for table in tables:
         if not table:
             continue
@@ -92,37 +136,24 @@ def extract_items(tables):
                 continue
             description_match = re.match(r"([A-Z0-9-]+)\s+(.*)", row[2])
             items.append({
-                "AsopNo": mappings.ASOP_NO,
+                "AsopNo": asop_no,
                 "OCRItemno": str(mappings.OCR_ITEM_NO_START + (index * 10)),
                 "Quantity": row[0],
                 "Uom": row[1],
                 "Material": description_match.group(1) if description_match else "",
-                "MatDesc": description_match.group(2) if description_match else row[2],
-                "UnitPrice": row[3],
-                "Amount": row[4]
+                "MatDesc": description_match.group(2) if description_match else row[2]
             })
         return items
     return []
 
 
-def extract_totals(tables):
-    totals = {}
-    for table in tables:
-        for row in table:
-            if len(row) < 2:
-                continue
-            label = normalize_header(row[0])
-            if label in mappings.TOTAL_LABELS:
-                totals[label.title() if label != "IVA" else "IVA"] = row[1]
-    return totals
-
-
-def default_metadata(file_data):
+def default_metadata(file_data, asop_no):
+    file_date = file_data.get("created_at") or datetime.now().strftime("%Y-%m-%d")
     return {
-        "AsopNo": mappings.ASOP_NO,
+        "AsopNo": asop_no,
         "CustEmail": file_data.get("sender_email", ""),
         "MonsterEmail": "",
-        "FileDate": file_data.get("created_at", datetime.now().strftime("%Y-%m-%d")),
+        "FileDate": normalize_date(file_date),
         "FileName": file_data.get("file_name", ""),
         "MimeType": file_data.get("file_type", "text/html"),
         "Field1": "",
@@ -134,8 +165,10 @@ def default_metadata(file_data):
 
 
 def parse_latam_html(content, file_data=None):
-    # Extract the LATAM PO header, item table, totals, and common metadata contract.
+    # Extract only the HTML fields included in the confirmed ERP payload contract.
     file_data = file_data or {}
+    asop_no = str(file_data.get("AsopNo") or file_data.get("asop_no") or mappings.ASOP_NO)
+    region = str(file_data.get("region") or mappings.REGION).upper()
     html = decode_html_bytes(content)
     parser = TableTextParser()
     parser.feed(html)
@@ -145,20 +178,19 @@ def parse_latam_html(content, file_data=None):
     date_match = re.search(r"Fecha Orden Compra\s*:?\s*(.*?)(?=\s+Proveedor\s*:)", full_text, flags=re.IGNORECASE)
     po_number = po_match.group(1) if po_match else "UNEXTRACTED"
     record = {
-        "AsopNo": mappings.ASOP_NO,
-        "Region": mappings.REGION,
+        "AsopNo": asop_no,
+        "Region": region,
         "Podoctype": mappings.PODOCTYPE,
         "CustPo": po_number,
-        "PODate": clean_text(date_match.group(1)) if date_match else "",
-        "DlvDate": extract_between(full_text, "Fecha Promesa", "Facturar a"),
-        "SalesOrgDescription": extract_between(full_text, "Proveedor", "Vendedor"),
-        "Soldto": extract_between(full_text, "Facturar a", "Consignar a"),
+        "PODate": normalize_date(date_match.group(1)) if date_match else "",
+        "DlvDate": normalize_date(extract_between(full_text, "Fecha Promesa", "Facturar a")),
+        "SalesOrg": extract_between(full_text, "Proveedor", "Vendedor"),
+        "SoldTo": extract_between(full_text, "Facturar a", "Consignar a"),
         "ShipTo": extract_between(full_text, "Consignar a", "Elabor"),
-        "NavHeadToItem": extract_items(parser.tables),
-        "NavHeadtoMeta": [default_metadata(file_data)]
+        "NavHeadToItem": extract_items(parser.tables, asop_no),
+        "NavHeadtoMeta": [default_metadata(file_data, asop_no)]
     }
-    record.update(extract_totals(parser.tables))
-    return {po_number: record}
+    return record
 
 
 def update_processed_values(data):
@@ -176,7 +208,8 @@ def html_parsing_flow(file_id):
         hana_data = local_erp_data_fetch(file_id)
         content = local_read_file(hana_data["file_path"])
         final_output = parse_latam_html(content, hana_data)
-        local_hana_storage_push(file_id, update_processed_values(final_output))
+        erp_payload = {final_output["CustPo"]: final_output}
+        local_hana_storage_push(file_id, update_processed_values(erp_payload))
         return final_output
 
     from core.db.connection import close_connection, connect_to_db
@@ -188,7 +221,8 @@ def html_parsing_flow(file_id):
         hana_data = erp_data_fetch(connection, file_id)
         content = read_file_from_object_store(hana_data.get("file_path", ""))
         final_output = parse_latam_html(content, hana_data)
-        hana_storage_push(file_id, connection, update_processed_values(final_output))
+        erp_payload = {final_output["CustPo"]: final_output}
+        hana_storage_push(file_id, connection, update_processed_values(erp_payload))
         close_connection(connection)
         # ERP publishing is opt-in after the DEV/UAT payload review.
         if not config.template_parser_test_mode:

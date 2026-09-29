@@ -1,7 +1,6 @@
 import csv
 import io
 import json
-import mimetypes
 import re
 import unicodedata
 from datetime import datetime
@@ -14,6 +13,22 @@ def clean_text(value):
     text = text.replace("\xa0", " ")
     text = re.sub(r"\s+", " ", text)
     return text.strip(" :")
+
+
+def normalize_date(value):
+    date_text = clean_text(value)
+    if not date_text:
+        return ""
+    try:
+        return datetime.fromisoformat(date_text.replace("Z", "+00:00")).strftime("%Y-%m-%d")
+    except ValueError:
+        pass
+    for date_format in ("%d-%m-%Y", "%d/%m/%Y", "%d.%m.%Y", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(date_text, date_format).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    raise ValueError(f"Unsupported CSV date value: {date_text}")
 
 
 def normalize_header(value):
@@ -61,15 +76,6 @@ def row_value(row, column_name):
     return clean_text(row.get(column_name, ""))
 
 
-def collapse(values):
-    values = [clean_text(value) for value in values if clean_text(value)]
-    if not values:
-        return ""
-    if len(values) == 1 or all(value == values[0] for value in values):
-        return values[0]
-    return values
-
-
 def get_column_mapping(fieldnames):
     return {
         field: find_column(fieldnames, aliases, field not in mappings.OPTIONAL_COLUMNS)
@@ -77,15 +83,16 @@ def get_column_mapping(fieldnames):
     }
 
 
-def default_metadata(file_data, mime_type):
+def default_metadata(file_data):
     file_name = file_data.get("file_name") or file_data.get("source_file") or ""
+    file_date = file_data.get("created_at") or datetime.now().strftime("%Y-%m-%d")
     return {
-        "AsopNo": mappings.ASOP_NO,
-        "CustEmail": file_data.get("sender_email", ""),
+        "AsopNo": str(file_data.get("AsopNo") or file_data.get("asop_no") or mappings.ASOP_NO),
+        "CustEmail": mappings.CUST_EMAIL,
         "MonsterEmail": "",
-        "FileDate": file_data.get("created_at", datetime.now().strftime("%Y-%m-%d")),
+        "FileDate": normalize_date(file_date),
         "FileName": file_name,
-        "MimeType": file_data.get("file_type") or mime_type,
+        "MimeType": mappings.CSV_MIME_TYPE,
         "Field1": "",
         "Field2": "",
         "Field3": "",
@@ -102,19 +109,15 @@ def transform_csv_rows(reader, columns):
         secuencia = row_value(row, columns["secuencia"])
         ship_city = row_value(row, columns["ship_city"]) or row_value(row, columns["destination_city"])
         rows.append({
-            "_tipo": tipo,
-            "_folio": folio,
-            "_secuencia": int(secuencia) if secuencia.isdigit() else secuencia,
-            "Identifier for ASOP / Sales Order combination": f"{tipo};{folio};{secuencia}",
-            "DlvDate": row_value(row, columns["fecha"]),
+            "CsvNO": f"{tipo};{folio};{secuencia}",
+            "DlvDate": normalize_date(row_value(row, columns["fecha"])),
             "CustPo": row_value(row, columns["po"]),
-            "Soldto": ";".join([
+            "SoldTo": ";".join([
                 row_value(row, columns["company"]),
                 row_value(row, columns["business_activity"]),
                 row_value(row, columns["sold_city"]),
                 row_value(row, columns["sold_address"])
             ]),
-            "TDB (Rene to confirm)": row_value(row, columns["tdb"]),
             "MatDesc": row_value(row, columns["description"]),
             "Quantity": row_value(row, columns["quantity"]),
             "Material": row_value(row, columns["material"]),
@@ -126,7 +129,7 @@ def transform_csv_rows(reader, columns):
 
 
 def parse_latam_csv(content, file_data=None):
-    # Normalize rows into the ERP-style header and line-item contract.
+    # Build one file-level record and retain every source row as a line item.
     file_data = file_data or {}
     text = decode_csv_bytes(content)
     reader = csv.DictReader(io.StringIO(text), delimiter=detect_csv_separator(text))
@@ -137,30 +140,29 @@ def parse_latam_csv(content, file_data=None):
     if not rows:
         raise ValueError("The CSV file does not contain any records.")
 
-    rows.sort(key=lambda item: (item["_tipo"], item["_folio"], item["_secuencia"]))
-    grouped = {}
-    for row in rows:
-        grouped.setdefault((row["_tipo"], row["_folio"]), []).append(row)
-
-    output = {}
-    for (_, folio), group in grouped.items():
-        record = {"AsopNo": mappings.ASOP_NO, "Region": mappings.REGION, "Podoctype": mappings.PODOCTYPE}
-        for field in mappings.HEADER_OUTPUT_FIELDS:
-            record[field] = collapse(row[field] for row in group)
-        record["NavHeadToItem"] = [
+    asop_no = str(file_data.get("AsopNo") or file_data.get("asop_no") or mappings.ASOP_NO)
+    output = {
+        "AsopNo": asop_no,
+        "AddField1": mappings.ADD_FIELD1,
+        "NavHeadToItem": [
             {
-                "AsopNo": mappings.ASOP_NO,
+                "AsopNo": asop_no,
+                "CsvNO": row["CsvNO"],
                 "OCRItemno": str(mappings.OCR_ITEM_NO_START + (index * 10)),
                 "MatDesc": row["MatDesc"],
                 "Quantity": row["Quantity"],
                 "Material": row["Material"],
-                "Uom": row["UoM"]
+                "Uom": row["UoM"],
+                "DlvDate": row["DlvDate"],
+                "CustPo": row["CustPo"],
+                "SoldTo": row["SoldTo"],
+                "ShipCity": row["ShipCity"],
+                "ShipTo": row["ShipTo"]
             }
-            for index, row in enumerate(group)
-        ]
-        mime_type = mimetypes.guess_type(file_data.get("file_name", ""))[0] or "text/csv"
-        record["NavHeadtoMeta"] = [default_metadata(file_data, mime_type)]
-        output[folio] = record
+            for index, row in enumerate(rows)
+        ],
+        "NavHeadtoMeta": [default_metadata(file_data)]
+    }
     return output
 
 
@@ -179,7 +181,8 @@ def csv_parsing_flow(file_id):
         hana_data = local_erp_data_fetch(file_id)
         content = local_read_file(hana_data["file_path"])
         final_output = parse_latam_csv(content, hana_data)
-        local_hana_storage_push(file_id, update_processed_values(final_output))
+        erp_payload = {final_output["AddField1"]: final_output}
+        local_hana_storage_push(file_id, update_processed_values(erp_payload))
         return final_output
 
     from core.db.connection import close_connection, connect_to_db
@@ -191,7 +194,8 @@ def csv_parsing_flow(file_id):
         hana_data = erp_data_fetch(connection, file_id)
         content = read_file_from_object_store(hana_data.get("file_path", ""))
         final_output = parse_latam_csv(content, hana_data)
-        hana_storage_push(file_id, connection, update_processed_values(final_output))
+        erp_payload = {final_output["AddField1"]: final_output}
+        hana_storage_push(file_id, connection, update_processed_values(erp_payload))
         close_connection(connection)
         # ERP publishing is opt-in after the DEV/UAT payload review.
         if not config.template_parser_test_mode:

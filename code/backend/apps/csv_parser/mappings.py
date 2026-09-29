@@ -2,6 +2,9 @@ ASOP_NO = "0000000000"
 OCR_ITEM_NO_START = 10
 REGION = "LATAM"
 PODOCTYPE = "CSV"
+ADD_FIELD1 = "MASSCREATION"
+CUST_EMAIL = "Amit.Nirala@Monsterenergy.com"
+CSV_MIME_TYPE = "application/vnd.ms-excel"
 
 # Aliases allow the parser to accept the descriptive LATAM headers and shorter variants.
 COLUMN_ALIASES = {
@@ -14,7 +17,6 @@ COLUMN_ALIASES = {
     "business_activity": ["GIRO"],
     "sold_city": ["COMUNA"],
     "sold_address": ["DIRECCION", "DIRECCION"],
-    "tdb": ["AFECTO", "TDB"],
     "description": ["PRODUCTO", "MATDESC", "DESCRIPTION"],
     "quantity": ["CANTIDAD", "QUANTITY"],
     "material": ["CODITEM", "MATERIAL", "MATERIALCODE"],
@@ -25,17 +27,3 @@ COLUMN_ALIASES = {
 }
 
 OPTIONAL_COLUMNS = {"ship_city", "destination_city", "ship_to"}
-
-HEADER_OUTPUT_FIELDS = [
-    "Identifier for ASOP / Sales Order combination",
-    "DlvDate",
-    "CustPo",
-    "Soldto",
-    "TDB (Rene to confirm)",
-    "MatDesc",
-    "Quantity",
-    "Material",
-    "UoM",
-    "ShipCity",
-    "ShipTo"
-]
