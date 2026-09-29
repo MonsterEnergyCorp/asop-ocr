@@ -80,7 +80,7 @@ urls:
   latam_pdf_schema_id: '1017575d-b270-4838-9009-2f91041d9d28'
 
 test_flags:
-  template_parser_test_mode: 'true'
+  template_parser_test_mode: 'false'
   local_test_mode: 'false'
 
 env: 'prod'
