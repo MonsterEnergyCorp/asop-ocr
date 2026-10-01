@@ -6,8 +6,10 @@ import json
 import logging
 load_dotenv()
 
-# Resolve local test output relative to the repository, regardless of launch directory.
-REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+# Docker copies core to /code/core; a checkout keeps it under code/backend/core.
+REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
+if REPOSITORY_ROOT.name == "backend":
+    REPOSITORY_ROOT = REPOSITORY_ROOT.parent.parent
 
 
 class Config(BaseSettings):
