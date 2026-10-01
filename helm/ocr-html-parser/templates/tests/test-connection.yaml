@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: "{{ include \"ocr-html-parser.fullname\" . }}-test-connection"
+  name: '{{ include "ocr-html-parser.fullname" . }}-test-connection'
   labels:
     {{- include "ocr-html-parser.labels" . | nindent 4 }}
   annotations:

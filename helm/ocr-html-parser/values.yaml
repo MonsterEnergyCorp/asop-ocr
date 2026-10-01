@@ -1,6 +1,6 @@
 replicaCount: 1
 image:
-  repository: ocrcontreg/ocr-html-parser
+  repository: vishalsunilpatil/ocr-html-parser
   pullPolicy: Always
   tag: latest
 imagePullSecrets: []
