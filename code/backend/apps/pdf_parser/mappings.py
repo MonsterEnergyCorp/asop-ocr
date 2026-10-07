@@ -28,7 +28,10 @@ header_data = {
     "SalesOrgCity": "SalesCity",
     "SalesOrgZip": "SalesZip",
     "documentNumber": "CustPo",
-    "PODate": "PODate"
+    "PODate": "PODate",
+    "soldToCountry": "CountryTemplate",
+    "ocrRegion": "Region",
+    "soldToName": "SoldToName"
       }
 
 line_item_data = {
@@ -44,10 +47,11 @@ line_item_data = {
     "billToCc": "SoldToCc",
     "shipToCc": "ShipToCc",
     "quantityCc": "QuantityCC",
-    "itemDeliverydate": "DlvDate",
+    "itemDeliveryDate": "DlvDate",
     "documentDate": "DlvDate",
     "unitOfMeasure": "Uom",
-    "ManufactCode": "Material"
+    "ManufactCode": "Material",
+    "OCRitemNumber": "POItemNo"
 }      
 
 metadata = {"poNumber": "CustPoCc",
