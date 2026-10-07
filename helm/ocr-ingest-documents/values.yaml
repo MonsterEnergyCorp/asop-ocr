@@ -7,7 +7,7 @@ replicaCount: 5
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: ocrcontreg-dgabg9ezb3dxg5fw.azurecr.io/ocr-ingest-doc   
+  repository: vishalsunilpatil/ocr-ingest-doc   
   # This sets the pull policy for images.
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
@@ -72,7 +72,7 @@ urls:
   ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr-prod.svc.cluster.local:8000/prod/parse/pdf'
   ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr-prod.svc.cluster.local:8000/prod/parse/excel'
   ocr_latam_csv_url : ''
-  ocr_latam_html_url : ''
+  ocr_latam_html_url : 'http://aiops-ocr-html-parser-ocr-html-parser.ocr.svc.cluster.local:8000/dev/parse/html'
   ocr_latam_template_url : ''
   ocr_erp_push_url: 'http://aiops-ocr-erp-push.ocr-prod.svc.cluster.local:8000/prod/ocr/erp-push'
   us_pdf_schema_id : 'e23096df-7854-4ea8-bd33-246f8e4dcf30'

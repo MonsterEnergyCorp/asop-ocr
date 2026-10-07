@@ -1,0 +1,88 @@
+﻿affinity: {}
+autoscaling:
+  enabled: false
+  maxReplicas: 100
+  minReplicas: 1
+  targetCPUUtilizationPercentage: 80
+configmap:
+  name: ocr-configmap
+env: dev
+fullnameOverride: ""
+image:
+  pullPolicy: Always
+  repository: vishalsunilpatil/ocr-ingest-doc
+  tag: latest
+imagePullSecrets: []
+ingress:
+  annotations:
+    cert-manager.io/issuer: ocr-cert-issuer
+    nginx.ingress.kubernetes.io/auth-url: http://aiops-ocr-authorizer.ocr.svc.cluster.local:8000/dev/ocr/auth
+    nginx.ingress.kubernetes.io/cors-allow-headers: DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization,User
+    nginx.ingress.kubernetes.io/cors-allow-origin: '*'
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+  className: nginx
+  enabled: true
+  hosts:
+  - host: api.nonprod.ocr.monsterenergy.com
+    paths:
+    - path: /dev/ocr/ingest
+      pathType: Prefix
+  tls:
+  - hosts:
+    - api.nonprod.ocr.monsterenergy.com
+    secretName: ocr-cert-secret
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+nameOverride: ""
+nodeSelector: {}
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+replicaCount: 1
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+secret:
+  name: ocr
+securityContext: {}
+service:
+  port: 8000
+  type: ClusterIP
+serviceAccount:
+  annotations: {}
+  automount: true
+  create: true
+  name: ""
+tolerations: []
+urls:
+  auth_token_url: https://sandbox-kmatzhj5.authentication.us21.hana.ondemand.com/oauth/token
+  doc_upload_url: https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/document/jobs
+  emea_pdf_schema_id: f965793d-7e80-476a-a222-609635449429
+  get_clients_url: https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/clients
+  latam_pdf_schema_id: 24c2fcf4-5f1b-4a3e-bb3a-6de8e9f9bbd0
+  ocr_csv_url: http://aiops-ocr-excel-parser.ocr.svc.cluster.local:8000/dev/parse/excel
+  ocr_latam_csv_url: ''
+  ocr_latam_html_url: http://aiops-ocr-html-parser-ocr-html-parser.ocr.svc.cluster.local:8000/dev/parse/html
+  ocr_latam_template_url: ''
+  ocr_erp_push_url: http://aiops-ocr-erp-push.ocr.svc.cluster.local:8000/dev/ocr/erp-push
+  ocr_pdf_url: http://aiops-ocr-pdf-parser.ocr.svc.cluster.local:8000/dev/parse/pdf
+  schemas_url: https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/schemas?clientId=default&scope=client
+  status_url: https://aiservices-dox.cfapps.us21.hana.ondemand.com/document-information-extraction/v1/document/catalog
+  us_pdf_schema_id: 0562b4e4-a557-47d5-883d-fb71c73eb3e7
+test_flags:
+  template_parser_test_mode: 'false'
+  local_test_mode: 'false'
+volumeMounts: []
+volumes: []
+
