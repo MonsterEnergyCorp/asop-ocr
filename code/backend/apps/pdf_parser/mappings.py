@@ -44,7 +44,7 @@ line_item_data = {
     "billToCc": "SoldToCc",
     "shipToCc": "ShipToCc",
     "quantityCc": "QuantityCC",
-    "itemdeliverydate": "DlvDate",
+    "itemDeliverydate": "DlvDate",
     "documentDate": "DlvDate",
     "unitOfMeasure": "Uom",
     "ManufactCode": "Material"
