@@ -59,11 +59,21 @@ def read_from_blob_storage(container_client, file_name):
     
 def push_to_blob_storage(file_name, content_type, sas_token, account_url, container_name, tags = None, content = None, tmp_file = None):
     """ Function to push the file to Azure Blob Storage for data extraction """
-        
+
+    if content is not None:
+        if not content:
+            raise ValueError("Cannot upload empty file content")
+    else:
+        if tmp_file is None:
+            raise ValueError("File content or a temporary file is required")
+        tmp_file.flush()
+        if os.path.getsize(tmp_file.name) == 0:
+            raise ValueError("Cannot upload an empty temporary file")
+
     container_client = connect_to_blob_storage(sas_token, account_url, container_name)
     blob_client = container_client.get_blob_client(file_name)
     logging.info("Uploading file to Azure Blob Storage")
-    if content:
+    if content is not None:
         blob_client.upload_blob(content, content_settings=ContentSettings(content_type=content_type), overwrite=True, tags=tags)
     else:
         with open(tmp_file.name, "rb") as data:
