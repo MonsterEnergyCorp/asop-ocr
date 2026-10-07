@@ -1,4 +1,5 @@
 import sys
+import asyncio
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +9,7 @@ BACKEND_PATH = Path(__file__).resolve().parents[1] / "code" / "backend"
 sys.path.insert(0, str(BACKEND_PATH))
 
 from apps.ingest_documents.ocr_ingest_doc import push_to_parsers
+from apps.ingest_documents import server as ingest_server
 from core.azure_storage import blob_storage_connection
 
 
@@ -62,6 +64,33 @@ class BlobUploadTests(unittest.TestCase):
 
 
 class IngestParserRequestTests(unittest.TestCase):
+    def test_public_path_uses_existing_endpoint_and_validation(self):
+        public_path = "/s4-dev/ocr/ingest"
+        with patch.object(ingest_server.config, "ingest_public_path", public_path):
+            app = ingest_server.create_app()
+        routes = {route.path: route for route in app.routes}
+        endpoint = routes[public_path].endpoint
+        self.assertIs(routes[f"/{ingest_server.env}/ocr/ingest"].endpoint, endpoint)
+        self.assertEqual({"POST"}, routes[public_path].methods)
+        payload = {"data": {"file_type": "text/html"}, "region": "LATAM"}
+        with patch.object(ingest_server, "upload_invoice_file", return_value={"status_code": 200}) as upload:
+            result = asyncio.run(endpoint(payload))
+            upload.assert_called_once_with(payload)
+            self.assertEqual(200, result["data"]["status_code"])
+            with self.assertRaises(ingest_server.HTTPException) as raised:
+                asyncio.run(endpoint({"data": {"file_type": "invalid"}}))
+            self.assertEqual(400, raised.exception.status_code)
+            upload.assert_called_once()
+
+    def test_no_extra_route_when_public_path_is_unset_or_matches_internal_path(self):
+        for public_path in ("", f"/{ingest_server.env}/ocr/ingest"):
+            with self.subTest(public_path=public_path), patch.object(
+                ingest_server.config, "ingest_public_path", public_path
+            ):
+                app = ingest_server.create_app()
+                post_routes = [route for route in app.routes if "POST" in getattr(route, "methods", set())]
+                self.assertEqual(1, len(post_routes))
+
     def test_parser_request_sends_json_checks_status_and_uses_timeout(self):
         response = Mock()
         with patch(

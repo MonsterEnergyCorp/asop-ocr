@@ -6,7 +6,6 @@ metadata:
   labels:
     {{- include "ocr-ingest-documents.labels" . | nindent 4 }}
   annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: "10m"  # Allow 10MB request body size
     {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}

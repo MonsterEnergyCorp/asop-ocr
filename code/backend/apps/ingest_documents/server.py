@@ -16,6 +16,9 @@ def init_routers(app_: FastAPI) -> None:
             raise HTTPException(status_code=400, detail="Invalid file type.")
         result = upload_invoice_file(data)
         return {"message": "File ingested successfully", "data": result}
+
+    if config.ingest_public_path and config.ingest_public_path != f"/{env}/ocr/ingest":
+        app_.add_api_route(config.ingest_public_path, upload_pdf, methods=["POST"])
     
     @app_.get("/")
     async def health_check():

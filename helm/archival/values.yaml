@@ -1,12 +1,11 @@
 replicaCount: 1
 image:
-  repository: ocrcontreg-dgabg9ezb3dxg5fw.azurecr.io/ocr-archival
+  repository: vishalsunilpatil/ocr-archival
   pullPolicy: Always
-  tag: "latest"
+  tag: "s4-dev-0606"
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets:
-  - name: ocr-azure-registry
+imagePullSecrets: []
 # This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
@@ -22,7 +21,7 @@ resources:
     cpu: 250m
     memory: 256Mi
 
-env: 'prod'
+env: 'dev'
 ARCHIVAL_PERIOD_DAYS: "3"
 
 secret:

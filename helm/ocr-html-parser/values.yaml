@@ -2,7 +2,7 @@ replicaCount: 1
 image:
   repository: vishalsunilpatil/ocr-html-parser
   pullPolicy: Always
-  tag: latest
+  tag: s4-dev-0606
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
@@ -18,7 +18,7 @@ secret:
   name: ocr
 configmap:
   name: ocr-configmap
-env: prod
+env: dev
 resources: {}
 livenessProbe:
   httpGet:

@@ -7,15 +7,14 @@ replicaCount: 5
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: ocrcontreg-dgabg9ezb3dxg5fw.azurecr.io/ocr-erp-push 
+  repository: vishalsunilpatil/ocr-erp-push
   # This sets the pull policy for images.
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "s4-dev-0606"
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets:
-  - name: ocr-azure-registry
+imagePullSecrets: []
 # This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
@@ -70,12 +69,12 @@ urls:
   status_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/document/catalog'
   doc_upload_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/document/jobs'
   get_clients_url : 'https://aiservices-dox.cfapps.us10.hana.ondemand.com/document-information-extraction/v1/clients'
-  ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr.svc.cluster.local:8000/parse/pdf'
-  ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr.svc.cluster.local:8000/parse/excel'
-  ocr_erp_push_url : 'http://aiops-ocr-erp-push.ocr.svc.cluster.local:8000/ocr/erp-push'
+  ocr_pdf_url : 'http://aiops-ocr-pdf-parser.ocr-s4-dev.svc.cluster.local:8000/dev/parse/pdf'
+  ocr_csv_url : 'http://aiops-ocr-excel-parser.ocr-s4-dev.svc.cluster.local:8000/dev/parse/excel'
+  ocr_erp_push_url : 'http://aiops-ocr-erp-push.ocr-s4-dev.svc.cluster.local:8000/dev/ocr/erp-push'
   pdf_schema_id : '0562b4e4-a557-47d5-883d-fb71c73eb3e7'
 
-env: 'prod'  
+env: 'dev'  
 
 ingress:
   annotations:
@@ -87,7 +86,7 @@ ingress:
   hosts:
   - host: api.ocr.monsterenergy.com
     paths:
-    - path: /prod/ocr/erp-push
+    - path: /dev/ocr/erp-push
       pathType: Prefix
   tls:
   - hosts:

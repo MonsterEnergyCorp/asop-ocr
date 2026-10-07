@@ -41,6 +41,9 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: INGEST_PUBLIC_PATH
+              value: {{ .Values.ingress.publicPath | default "" | quote }}
           envFrom:
             - configMapRef:
                 name: {{ .Values.configmap.name }}

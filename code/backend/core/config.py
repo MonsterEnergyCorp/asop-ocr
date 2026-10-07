@@ -44,6 +44,7 @@ class Config(BaseSettings):
     odata_username: str = os.getenv("odata_username") or ''
     odata_password: str = os.getenv("odata_pwd") or ''
     env: str = os.getenv("env") or 'dev'
+    ingest_public_path: str = os.getenv("INGEST_PUBLIC_PATH", "")
     template_parser_test_mode: bool = os.getenv("TEMPLATE_PARSER_TEST_MODE", "true").lower() == "true"
     local_test_mode: bool = os.getenv("LOCAL_TEST_MODE", "false").lower() == "true"
     local_test_storage_dir: str = os.getenv("LOCAL_TEST_STORAGE_DIR") or str(REPOSITORY_ROOT / "tools" / "local_test_storage")

@@ -1,5 +1,42 @@
 # CSV/HTML Deployment Runbook
 
+## S4 DEV Public Ingest Endpoint
+
+The `prod_replica_test` ingest chart exposes this exact path in `ocr-s4-dev`:
+
+```text
+https://api.nonprod.ocr.monsterenergy.com/s4-dev/ocr/ingest
+```
+
+The Deployment passes `ingress.publicPath` as `INGEST_PUBLIC_PATH`. The application
+registers it as an additional POST route using the existing handler and validation.
+The internal `/dev/ocr/ingest` route remains available. No NGINX rewrite or regex
+annotation is used, so this change does not require changing the old DEV/QA paths.
+Keep `ingress.publicPath` and the Ingress host's path identical.
+
+Rebuild and push the ingest image from the updated source before upgrading Helm.
+If reusing `s4-dev-0606`, ensure the push succeeded before rollout; this overwrites
+that tag. A config-only upgrade cannot add the new route to an older image.
+
+The issuer definition at `helm/ocr-ingest-documents/issuer.yaml` is not a Helm
+template. It must be applied separately in the new namespace. Review its ACME
+contact email with the platform owner first; do not copy TLS private keys from
+the old namespace. From a connected PowerShell terminal at the repository root:
+
+```powershell
+kubectl apply -n ocr-s4-dev -f .\helm\ocr-ingest-documents\issuer.yaml
+kubectl wait -n ocr-s4-dev --for=condition=Ready issuer/ocr-cert-issuer --timeout=180s
+helm upgrade aiops-ocr-ingest-documents .\helm\ocr-ingest-documents -n ocr-s4-dev --wait --timeout 5m
+kubectl get ingress,certificate,issuer -n ocr-s4-dev
+kubectl wait -n ocr-s4-dev --for=condition=Ready certificate/ocr-cert-secret --timeout=300s
+```
+
+Ingress authentication remains delegated to the S4 DEV authorizer. Certificate
+issuance and live routing must be verified in the cluster. The email automation
+owner must configure the new URL and the required authentication headers; changing
+the email subject does not route it to this namespace. Do not redirect a shared
+mailbox's existing DEV/QA flow without approval. ERP publishing remains enabled.
+
 ## Scope
 
 This runbook covers the LATAM CSV and HTML parser services added on branch:
