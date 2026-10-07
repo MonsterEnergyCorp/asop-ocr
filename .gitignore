@@ -1,0 +1,15 @@
+# Python environments
+.venv/
+venv/
+env/
+/reference_docs/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+
+# Local parser outputs and test data
+*.log
+html-output.json
+csv-output.json
+tools/local_test_storage/

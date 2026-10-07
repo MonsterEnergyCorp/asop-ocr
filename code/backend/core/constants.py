@@ -1,6 +1,11 @@
 MIN_FILE_SIZE_BYTES = 5
 PROCESSING_STATUS = 'PROCESSING'
 PDF_CONTENT = 'application/pdf'
-CSV_CONTENT = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-SUPPORTED_FILE_TYPES = [PDF_CONTENT, CSV_CONTENT]
+XLSX_CONTENT = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+XLSM_CONTENT = 'application/vnd.ms-excel.sheet.macroenabled.12'
+SPREADSHEET_CONTENT = [XLSX_CONTENT, XLSM_CONTENT]
+CSV_CONTENT = ['text/csv', 'application/csv', 'application/vnd.ms-excel']
+HTML_CONTENT = ['text/html', 'application/html', 'application/xhtml+xml']
+OCTET_STREAM_CONTENT = 'application/octet-stream'
+SUPPORTED_FILE_TYPES = [PDF_CONTENT, *SPREADSHEET_CONTENT, *CSV_CONTENT, *HTML_CONTENT, OCTET_STREAM_CONTENT]
 SUPPORTED_REGIONS = ['US', 'EMEA', 'LATAM']

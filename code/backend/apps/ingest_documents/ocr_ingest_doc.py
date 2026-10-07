@@ -2,7 +2,7 @@ import json, pikepdf, requests, os, tempfile, uuid, logging, base64
 from datetime import datetime
 from fastapi import UploadFile, HTTPException
 from core.azure_storage.blob_storage_connection import *
-from core.constants import SUPPORTED_FILE_TYPES, PDF_CONTENT, CSV_CONTENT, MIN_FILE_SIZE_BYTES, PROCESSING_STATUS, SUPPORTED_REGIONS
+from core.constants import SUPPORTED_FILE_TYPES, PDF_CONTENT, CSV_CONTENT, HTML_CONTENT, SPREADSHEET_CONTENT, OCTET_STREAM_CONTENT, XLSX_CONTENT, XLSM_CONTENT, MIN_FILE_SIZE_BYTES, PROCESSING_STATUS, SUPPORTED_REGIONS
 from core.db.query import execute_query
 from core.db.connection import *
 from core.db import queries
@@ -20,6 +20,9 @@ db_name = config.db_name
 db_collection = config.db_collection
 ocr_pdf_url = config.ocr_pdf_url
 ocr_csv_url = config.ocr_csv_url
+ocr_latam_template_url = config.ocr_latam_template_url
+ocr_latam_csv_url = config.ocr_latam_csv_url
+ocr_latam_html_url = config.ocr_latam_html_url
 env = config.env
 
 class DuplicateException(Exception):
@@ -97,6 +100,8 @@ def upload_invoice_file(data: dict):
         # Check content_type
         content_type, data = get_attachment_content_type(data)
         file_type_folder, error_response = get_file_type(content_type)
+        if error_response is not None:
+            return {"status_code": 400, "message": error_response}
 
         if file_type_folder == 'pdf':
             # use file id instead of uuid4
@@ -111,7 +116,7 @@ def upload_invoice_file(data: dict):
             tmp_file.close()
 
 
-        if file_type_folder == 'csv':
+        if file_type_folder in ['spreadsheet', 'csv', 'html']:
             # Call invoice_template_processor function
             tmp_file = tempfile.NamedTemporaryFile(mode='w+b')
             tmp_file.write(file_content)
@@ -129,7 +134,14 @@ def upload_invoice_file(data: dict):
             }
             data=add_audit_fields(data)
             hana_storage_insert(data)
-            push_to_parsers(ocr_csv_url, document_no)
+            parser_url = {
+                'spreadsheet': ocr_csv_url,
+                'csv': ocr_latam_csv_url or ocr_latam_template_url,
+                'html': ocr_latam_html_url or ocr_latam_template_url
+            }.get(file_type_folder)
+            if not parser_url:
+                raise RuntimeError(f'No parser URL configured for {file_type_folder}')
+            push_to_parsers(parser_url, document_no)
             tmp_file.close()
 
             return {"status_code": 200, "message" : response}
@@ -154,7 +166,8 @@ def push_to_parsers(url, file_id):
     try:
         file_path = file_id
         payload = {"file_id": file_path}
-        response = requests.post(url, data=json.dumps(payload))
+        response = requests.post(url, json=payload, timeout=30)
+        response.raise_for_status()
         return response
     except Exception as e:
         logging.error(f'Error pushing file to parser: {e}')
@@ -188,8 +201,13 @@ def get_file_type(content_type):
         return content_type, {'message': 'Not a valid file type'}
     if content_type == PDF_CONTENT:
         return 'pdf', None
-    if content_type == CSV_CONTENT:
+    if content_type in CSV_CONTENT:
         return 'csv', None
+    if content_type in HTML_CONTENT:
+        return 'html', None
+    if content_type in SPREADSHEET_CONTENT:
+        return 'spreadsheet', None
+    return content_type, {'message': 'Not a valid file type'}
 
 def add_audit_fields(data):
     data["created_by"] = "system"
@@ -310,8 +328,16 @@ def fail_validation(file_name, status_message, data):
 
 def get_attachment_content_type(data):
     content_type = data.get('file_type','')
-    if content_type == 'application/octet-stream':
-        file_extension = data.get('file_name', '').lower().split('.')[-1]   
-        content_type = PDF_CONTENT if file_extension == 'pdf' else CSV_CONTENT
+    if content_type == OCTET_STREAM_CONTENT:
+        file_extension = os.path.splitext(data.get('file_name', '').lower())[1]
+        content_type_by_extension = {
+            '.pdf': PDF_CONTENT,
+            '.csv': 'text/csv',
+            '.html': 'text/html',
+            '.htm': 'text/html',
+            '.xlsx': XLSX_CONTENT,
+            '.xlsm': XLSM_CONTENT
+        }
+        content_type = content_type_by_extension.get(file_extension, content_type)
         data['file_type'] = content_type
     return content_type, data

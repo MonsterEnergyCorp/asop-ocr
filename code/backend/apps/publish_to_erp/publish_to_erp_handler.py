@@ -3,6 +3,7 @@ from core.db.connection import *
 from core.db.query import *
 from core.util import *
 from core.config import config
+from core.constants import CSV_CONTENT, HTML_CONTENT, SPREADSHEET_CONTENT
 import logging
 from core.azure_storage.blob_storage_connection import *
 import requests
@@ -164,11 +165,17 @@ def publish_to_erp(data: dict):
         payload = json.loads(hana_data["erp_request_payload"])
         file_path = hana_data["eml_file_path"]
         content = read_file_from_object_store(file_path)
-        if hana_data["file_type"] == "application/pdf":
+        file_type = hana_data.get("file_type")
+        if file_type == "application/pdf":
             po_no = hana_data.get("po_numbers")
             status, failures = pdf_call_to_erp(payload, po_no, content)
-        elif hana_data["file_type"] in ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv']:
+        elif file_type in [*SPREADSHEET_CONTENT, *CSV_CONTENT, *HTML_CONTENT]:
             status, failures = excel_call_to_erp(payload, content, hana_data)
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported ERP document type: {file_type}"
+            )
         if failures:
             container_client = connect_to_blob_storage(sas_token, account_url, container_name)
             failure_file_path = move_blob_to_failed_folder(container_client, file_path)   

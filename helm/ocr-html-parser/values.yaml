@@ -1,0 +1,30 @@
+replicaCount: 1
+image:
+  repository: vishalsunilpatil/ocr-html-parser
+  pullPolicy: Always
+  tag: latest
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+service:
+  type: ClusterIP
+  port: 8000
+secret:
+  name: ocr
+configmap:
+  name: ocr-configmap
+env: prod
+resources: {}
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
