@@ -229,6 +229,28 @@ def handle_manufact_code(items):
     
     return items
 
+def _has_value(value):
+    """True if an extracted value is really filled (output_formatter turns None into the string 'None')."""
+    return value is not None and str(value).strip() not in ("", "None")
+
+
+def handle_unit_reference(items):
+    """
+    If unitOfMeasure is empty and unitReference is filled,
+    copy the unitReference value into unitOfMeasure.
+
+    Args:
+        items (list): List of line items (before output_filtering)
+
+    Returns:
+        list: Processed list of line items
+    """
+    for item in items:
+        if not _has_value(item.get("unitOfMeasure")) and _has_value(item.get("unitReference")):
+            item["unitOfMeasure"] = item["unitReference"]
+    return items
+
+
 def process_region_specific_data(data, region):
     """
     Process region-specific data transformations.
@@ -265,6 +287,10 @@ def output_filtering(data, region):
     """
     # Process region-specific data first
     data = process_region_specific_data(data, region)
+
+    # Applies to all regions: fall back to unitReference when unitOfMeasure is empty
+    if isinstance(data, dict) and isinstance(data.get("NavHeadToItem"), list):
+        data["NavHeadToItem"] = handle_unit_reference(data["NavHeadToItem"])
     
     filtered_output = {}
     filtered_line_items = []
