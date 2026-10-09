@@ -6,6 +6,8 @@ from html.parser import HTMLParser
 
 from apps.html_parser import mappings
 
+BR_MARK = "<<BR>>"  # marks a real <br> tag so name/address lines can be split later
+
 
 def clean_text(value):
     text = "" if value is None else str(value)
@@ -83,6 +85,7 @@ class TableTextParser(HTMLParser):
     def __init__(self):
         super().__init__()
         self.text_parts = []
+        self.raw_parts = []  # same as text_parts, but <br> kept as BR_MARK
         self.tables = []
         self.current_table = None
         self.current_row = None
@@ -97,6 +100,7 @@ class TableTextParser(HTMLParser):
             self.current_cell = []
         elif tag == "br":
             self.text_parts.append(" ")
+            self.raw_parts.append(BR_MARK)
             if self.current_cell is not None:
                 self.current_cell.append(" ")
 
@@ -114,6 +118,7 @@ class TableTextParser(HTMLParser):
 
     def handle_data(self, data):
         self.text_parts.append(data)
+        self.raw_parts.append(data)
         if self.current_cell is not None:
             self.current_cell.append(data)
 
@@ -125,6 +130,20 @@ def extract_between(text, start, end):
     pattern = rf"{re.escape(start)}\s*:?\s*(.*?)(?=\s+{re.escape(end)}\S{{0,3}}\s*:|$)"
     match = re.search(pattern, text, flags=re.IGNORECASE)
     return clean_text(match.group(1)) if match else ""
+
+
+def extract_facturar_a(raw_text):
+    # "Facturar a" block = first <br>-separated line is the name (SoldTo),
+    # the remaining lines are the address (ShipTo).
+    pattern = r"Facturar a\s*:?\s*(.*?)(?=\s+Consignar a\S{0,3}\s*:|$)"
+    match = re.search(pattern, raw_text, flags=re.IGNORECASE)
+    if not match:
+        return "", ""
+    lines = [clean_text(part) for part in match.group(1).split(BR_MARK)]
+    lines = [line for line in lines if line]
+    if not lines:
+        return "", ""
+    return lines[0], " ".join(lines[1:])
 
 
 def extract_items(tables, asop_no):
@@ -177,6 +196,8 @@ def parse_latam_html(content, file_data=None):
     parser = TableTextParser()
     parser.feed(html)
     full_text = clean_text(" ".join(parser.text_parts))
+    raw_text = re.sub(r"\s+", " ", " ".join(parser.raw_parts))
+    sold_to, ship_to = extract_facturar_a(raw_text)
 
     po_match = re.search(r"Orden de compra\s*:?\s*([A-Z0-9-]+)", full_text, flags=re.IGNORECASE)
     date_match = re.search(r"Fecha Orden Compra\s*:?\s*(.*?)(?=\s+Proveedor\s*:)", full_text, flags=re.IGNORECASE)
@@ -189,8 +210,8 @@ def parse_latam_html(content, file_data=None):
         "PODate": normalize_date(date_match.group(1)) if date_match else "",
         "DlvDate": normalize_date(extract_between(full_text, "Fecha Promesa", "Facturar a")),
         "SalesOrg": extract_between(full_text, "Proveedor", "Vendedor"),
-        "SoldTo": extract_between(full_text, "Facturar a", "Consignar a"),
-        "ShipTo": extract_between(full_text, "Consignar a", "Elabor"),
+        "SoldTo": sold_to,
+        "ShipTo": ship_to,
         "NavHeadToItem": extract_items(parser.tables, asop_no),
         "NavHeadtoMeta": [default_metadata(file_data, asop_no)]
     }
