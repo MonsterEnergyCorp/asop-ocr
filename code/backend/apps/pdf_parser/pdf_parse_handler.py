@@ -115,8 +115,8 @@ def document_status(auth_token, get_status_url, job_id, client_id, delete_url):
         "content-type": "multipart/form-data; boundary=---011000010111000001101001"
     }
     status = "PENDING"
-    intervals = [10, 5, 5, 5, 3, 3, 3]  # Intervals in seconds
-
+    # intervals = [10, 5, 5, 5, 3, 3, 3]  # Intervals in seconds
+    intervals = [10, 5, 5, 5, 3, 3, 3,3,3,3,3,4]  
     for interval in intervals:
         time.sleep(interval)  # Wait for the specified interval
         response = requests.post(get_status_url, data=payload, headers=headers)
