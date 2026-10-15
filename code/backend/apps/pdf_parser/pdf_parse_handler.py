@@ -117,6 +117,7 @@ def document_status(auth_token, get_status_url, job_id, client_id, delete_url):
     status = "PENDING"
     # intervals = [10, 5, 5, 5, 3, 3, 3]  # Intervals in seconds
     intervals = [10, 5, 5, 5, 3, 3, 3,3,3,3,3,4]  
+
     for interval in intervals:
         time.sleep(interval)  # Wait for the specified interval
         response = requests.post(get_status_url, data=payload, headers=headers)
@@ -236,8 +237,10 @@ def _has_value(value):
 
 def handle_unit_reference(items):
     """
-    If unitOfMeasure is empty and unitReference is filled,
-    copy the unitReference value into unitOfMeasure.
+    Unit of measure rule (applied to every line item, all regions):
+      - unitOfMeasure and unitReference both filled and NOT equal -> unitOfMeasure = unitReference
+      - unitOfMeasure empty and unitReference filled              -> unitOfMeasure = unitReference
+      - unitReference empty, or both equal                        -> unitOfMeasure left as it is
 
     Args:
         items (list): List of line items (before output_filtering)
@@ -246,8 +249,13 @@ def handle_unit_reference(items):
         list: Processed list of line items
     """
     for item in items:
-        if not _has_value(item.get("unitOfMeasure")) and _has_value(item.get("unitReference")):
-            item["unitOfMeasure"] = item["unitReference"]
+        unit_of_measure = item.get("unitOfMeasure")
+        unit_reference = item.get("unitReference")
+        if _has_value(unit_of_measure) and _has_value(unit_reference):
+            if str(unit_of_measure).strip() != str(unit_reference).strip():
+                item["unitOfMeasure"] = unit_reference
+        elif not _has_value(unit_of_measure) and _has_value(unit_reference):
+            item["unitOfMeasure"] = unit_reference
     return items
 
 
@@ -288,7 +296,7 @@ def output_filtering(data, region):
     # Process region-specific data first
     data = process_region_specific_data(data, region)
 
-    # Applies to all regions: fall back to unitReference when unitOfMeasure is empty
+    # Applies to all regions: unit of measure rule (see handle_unit_reference)
     if isinstance(data, dict) and isinstance(data.get("NavHeadToItem"), list):
         data["NavHeadToItem"] = handle_unit_reference(data["NavHeadToItem"])
     
