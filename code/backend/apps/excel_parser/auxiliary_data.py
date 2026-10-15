@@ -334,3 +334,90 @@ regional_map_lvl2 = {'EMEA': {'ItemShipTo': 'ShipTo',
   'ItemDocType': 'SalesDocType',
   'ItemSalesOrg': 'SalesOrg',
   'ItemPODate': 'PODate'}}
+
+
+# ---------------------------------------------------------------------------
+# APAC FG PO templates (Macau + China) - parameters only.
+# "APAC_FG_PO" is a template profile, not a HANA region: it is switched on only for sheets that
+# contain the labels listed in template_region_markers (end of file), whatever region the file
+# arrived under. Any other file - including other APAC templates - is processed exactly as before.
+# ---------------------------------------------------------------------------
+
+# 1. Labels -> ERP fields (picked up by erp_field_mapping through regional_map_lvl1)
+regional_map_lvl1["APAC_FG_PO"] = {
+    # Macau FG PO
+    "BILLTO:": "BillTo",
+    "SHIPTO:": "ShipTo",
+    "Soldto": "SoldTo",
+    # China FG PO (English + Chinese text in the same cell)
+    "ORDERDATE订单日期": "PODate",
+    "REQUESTEDDELIVERYDATE要求发货日期": "DlvDate",
+    "PO#(required)订单号": "CustPo",
+    "SOLDTO#客户号": "SoldTo",
+    "BILLTO销售到": "BillTo",
+    "SHIPTO运送到": "ShipTo",
+    "PRODUCTDESCRIPTION产品描述": "MatDesc",
+    "ProductCode产品代码": "Material",
+    "#ofCases几个箱": "Quantity",
+    "Plant供应源": "Plant",
+}
+
+# 2. Extra labels the sheet scan must recognise (also act as stop markers) - only for this region
+regional_keys = {
+    "APAC_FG_PO": [
+        "BILLTO:",
+        "SHIPTO:",
+        "Soldto",
+        "ORDERDATE订单日期",
+        "REQUESTEDDELIVERYDATE要求发货日期",
+        "PO#(required)订单号",
+        "SOLDTO#客户号",
+        "BILLTO销售到",
+        "SHIPTO运送到",
+        "CONTACTNAME联系人",
+        "PHONE电话",
+        "EMAIL电子邮件",
+        "PRODUCTDESCRIPTION产品描述",
+        "CO-PACKER提货工厂",
+        "Plant供应源",
+        "ProductCode产品代码",
+        "TypeofProduct产品类型",
+        "#ofCases几个箱",
+        "NetValue价格",
+        "TotalCases总箱",
+        "TotalValue(excl.GST)",
+        "E-MailOrdersTo发订单到：",
+        "CustomerSignature客户签名：",
+        "Date日期：",
+    ],
+}
+
+# 3. Line item columns for this region (existing "Other" columns + Plant)
+tabular_keys["APAC_FG_PO"] = {"Material": [*tabular_keys["Other"]["Material"], "Plant"]}
+
+# 4. Behaviour switches read by the handler / post processing (all optional)
+#    party_blocks     : BILL TO / SHIP TO block = customer number, then name/address lines (Chinese lines dropped)
+#    fill_down_fields : item fields held in one merged cell, copied down to every item row
+#    default_uom      : Uom used when the template has no unit column (other regions keep "CS")
+#    quantity_thousands: Quantity sent with thousands separators (e.g. 26,000)
+#    header_fields    : extra header fields added to the payload
+regional_options = {
+    "APAC_FG_PO": {
+        "party_blocks": True,
+        "fill_down_fields": ["Plant"],
+        "default_uom": "",
+        "quantity_thousands": True,
+        "header_fields": {"AsopNo": "0000000000", "Podoctype": "EXCEL", "Region": "APAC"},
+    }
+}
+
+# 5. Template recognition. The region on a file comes from the mailbox/blob folder (us / emea / latam),
+#    not from the template, so these templates are also recognised by their own labels.
+#    A sheet that contains ALL labels of any one list below is processed with that profile's
+#    parameters above, whatever region the file arrived under. Other sheets are unaffected.
+template_region_markers = {
+    "APAC_FG_PO": [
+        ["PO#(required)订单号"],                                        # China FG PO
+        ["BILLTO:", "SHIPTO:", "Soldto", "OrderType", "SalesOrg"],      # Macau FG PO
+    ],
+}

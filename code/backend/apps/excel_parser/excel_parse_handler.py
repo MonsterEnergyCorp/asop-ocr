@@ -149,6 +149,17 @@ def transform_string(cell):
     """
     return cell.replace(' ','').replace('\n','') if isinstance(cell, str) else cell
 
+def detect_template_region(sheet, region):
+    """
+    Returns the region whose template this sheet is (judged by its own labels), else the file's region.
+    A sheet without any of the markers in template_region_markers keeps its region, so existing templates are untouched.
+    """
+    labels = {transform_string(cell) for row in sheet for cell in row if isinstance(cell, str)}
+    for template_region, marker_sets in template_region_markers.items():
+        if any(all(marker in labels for marker in markers) for markers in marker_sets):
+            return template_region
+    return region
+
 def erp_field_mapping(parsed_data, region):
     """
     Function to map the parsed data to the ERP fields.
@@ -282,20 +293,24 @@ def excel_parsing_flow(file_id):
     failed_sheets = []
     for sheet_name, sheet in workbook_data.items():
         try:
-            parsed_data = sheet_traversal(sheet, keys)
+            sheet_region = detect_template_region(sheet, region)
+            parsed_data = sheet_traversal(sheet, keys + regional_keys.get(sheet_region, []))
             logging.info(f' PARSED DATA: {parsed_data}')
             if not parsed_data:
                 continue
 
-            parsed_data = erp_field_mapping(parsed_data, region)
-            tabular_keys_instance = get_tabular_keys_instance(region, parsed_data)
+            parsed_data = erp_field_mapping(parsed_data, sheet_region)
+            tabular_keys_instance = get_tabular_keys_instance(sheet_region, parsed_data)
             header_data = extract_header_data(parsed_data, tabular_keys_instance)
             tabular_data = extract_tabular_data(parsed_data, tabular_keys_instance)
-            header_data, tabular_data, metadata = post_processing_transformations(header_data, tabular_data, po_key, hana_data, region)
+            header_data, tabular_data, metadata = post_processing_transformations(header_data, tabular_data, po_key, hana_data, sheet_region)
             if not tabular_data:
                 continue
+            region_header_fields = regional_options.get(sheet_region, {}).get("header_fields")
+            if region_header_fields:
+                header_data = {**region_header_fields, **header_data}
             sheet_po_numbers = extract_po_numbers(header_data, tabular_data, sheet_name)
-            header_data = apparels_form_check(sheet_name, region, header_data)  #ZEM
+            header_data = apparels_form_check(sheet_name, sheet_region, header_data)  #ZEM
             final_output[sheet_po_numbers] = {**header_data, "NavHeadToItem": tabular_data, "NavHeadtoMeta": metadata}
         except Exception as e:
             logging.info(f'EXCEL EXTRACTION ISSUE: {e}')

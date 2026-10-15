@@ -1,6 +1,7 @@
 import logging
 import re
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from apps.excel_parser.auxiliary_data import *
 
 def process_bill_and_ship_to(header_data):
@@ -27,6 +28,50 @@ def process_bill_and_ship_to(header_data):
         header_data = generate_addresses(header_data,header_data.get("BillTo", []), "Bill")
         header_data = generate_addresses(header_data,header_data.get("ShipTo", []), "Ship")
         return header_data
+
+def has_cjk(text):
+    """True if the text contains Chinese/Japanese/Korean characters or full-width symbols."""
+    return bool(re.search(r"[\u3000-\u9fff\uff00-\uffef]", text))
+
+def process_numbered_party_blocks(header_data):
+    """
+    BILL TO / SHIP TO laid out as a block: customer number, then name/address lines.
+    [1007430, 'Shanghai Shenmei ...', '<chinese line>'] -> BillTo = '1007430', BillAddress = 'Shanghai Shenmei ...'
+    Lines with Chinese characters are left out.
+    """
+    for party in ("Bill", "Ship"):
+        values = header_data.get(f"{party}To")
+        if not isinstance(values, list):
+            continue
+        values = [str(v).strip() for v in values if v is not None and str(v).strip()]
+        number = values[0] if values and values[0].replace(".0", "").isdigit() else ""
+        address_lines = values[1:] if number else values
+        address_lines = [line for line in address_lines if not has_cjk(line)]
+        header_data[f"{party}To"] = number.replace(".0", "") if number else ""
+        if address_lines:
+            header_data[f"{party}Address"] = ",".join(address_lines)
+    return header_data
+
+def to_thousands(value):
+    """'26000' -> '26,000', '451.2' -> '451.2'. Non-numeric values are returned unchanged."""
+    try:
+        return f"{Decimal(str(value).strip()):,}"
+    except (InvalidOperation, ValueError):
+        return value
+
+def fill_down_fields(tabular_data, fields):
+    """
+    Copies a value held in one (merged) cell down to the item rows below it, per field.
+    Done before zero-quantity rows are dropped, so the value is not lost with them.
+    """
+    for field in fields:
+        current = ""
+        for item in tabular_data:
+            if item.get(field):
+                current = item[field]
+            elif current and field in item:
+                item[field] = current
+    return tabular_data
 
 def special_quantity_transforms(tabular_data):
     for i in tabular_data:
@@ -83,6 +128,9 @@ def process_tabular_data(tabular_data, po_key, region):
     If customer number is present, it sorts and groups based on string entry.
     """
     tabular_data = special_quantity_transforms(tabular_data)
+    region_options = regional_options.get(region, {})
+    default_uom = region_options.get("default_uom", "CS")
+    tabular_data = fill_down_fields(tabular_data, region_options.get("fill_down_fields", []))
     quantity_field = "Quantity"
     transformed_tabular_data = []
     line_count=0
@@ -93,8 +141,10 @@ def process_tabular_data(tabular_data, po_key, region):
             i["AsopNo"] = "0000000000"
             line_count += 10
             i["OCRItemno"] = str(line_count)
-            i["Uom"] = i.get("Uom") if i.get("Uom") else "CS"
+            i["Uom"] = i.get("Uom") if i.get("Uom") else default_uom
             i = region_specific_tabular_transforms(region,i)
+            if region_options.get("quantity_thousands"):
+                i["Quantity"] = to_thousands(i.get("Quantity"))
             transformed_tabular_data.append(i)
 
     return transformed_tabular_data
@@ -197,7 +247,10 @@ def apparels_form_check(sheet_name, region, header_data):
 
 def post_processing_transformations(header_data, tabular_data, po_key, hana_data, region):
     """Primary post processing function to drive the transformations"""
-    header_data = process_bill_and_ship_to(header_data)
+    if regional_options.get(region, {}).get("party_blocks"):
+        header_data = process_numbered_party_blocks(header_data)
+    else:
+        header_data = process_bill_and_ship_to(header_data)
     header_data = finalize_cust_po_level(header_data, po_key)
     tabular_data = process_tabular_data(tabular_data, po_key, region)
     metadata = add_erp_metadata_information(hana_data)
