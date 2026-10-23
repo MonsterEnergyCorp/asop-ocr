@@ -40,7 +40,7 @@ def make_middleware() -> list[Middleware]:
 def create_app() -> FastAPI:
     app_ = FastAPI(
         title="HTML Parsing",
-        description="Parse LATAM HTML PO templates",
+        description="Parse HTML PO templates",
         version="1.0.0",
         dependencies=[],
         middleware=make_middleware(),
