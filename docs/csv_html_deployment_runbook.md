@@ -251,6 +251,7 @@ HTML -> ocr_latam_html_url or ocr_latam_template_url
 code/backend/apps/csv_parser/server.py
 code/backend/apps/csv_parser/csv_parse_handler.py
 code/backend/apps/csv_parser/mappings.py
+code/backend/apps/csv_parser/debug_csv_local.py   (local debugging only, not used by the service)
 ```
 
 Execution order:
@@ -260,11 +261,17 @@ parse_csv()
   -> csv_parsing_flow(file_id)
   -> erp_data_fetch()
   -> read_file_from_object_store()
-  -> parse_latam_csv()
-  -> update_processed_values()
+  -> parse_or_fail()
+       -> parse_csv_po()          (template picked from mappings.CSV_TEMPLATES by header markers)
+       -> failed_record()         (unreadable file: no data, metadata kept, Status 52)
+  -> build_erp_payload()          (keyed by AddField1; UNEXTRACTED + Status 52 on failure)
+  -> update_processed_values()    (po_numbers = CustPo of the line items)
   -> hana_storage_push()
-  -> optional push_to_erp()
+  -> close_connection()
+  -> optional push_to_erp()       (only when TEMPLATE_PARSER_TEST_MODE=false)
 ```
+
+Template change for a new CSV layout: add one entry to `CSV_TEMPLATES` in `mappings.py`. No parser code change.
 
 ### HTML
 

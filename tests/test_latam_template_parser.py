@@ -41,8 +41,8 @@ class LatamTemplateParserTests(unittest.TestCase):
         self.assertEqual("20", result["NavHeadToItem"][1]["OCRItemno"])
         self.assertEqual("2026-07-20", result["NavHeadToItem"][0]["DlvDate"])
         self.assertEqual("2026-08-25", result["NavHeadtoMeta"][0]["FileDate"])
-        self.assertEqual("Amit.Nirala@Monsterenergy.com", result["NavHeadtoMeta"][0]["CustEmail"])
-        self.assertEqual("application/vnd.ms-excel", result["NavHeadtoMeta"][0]["MimeType"])
+        self.assertEqual("sender@example.com", result["NavHeadtoMeta"][0]["CustEmail"])
+        self.assertEqual("text/csv", result["NavHeadtoMeta"][0]["MimeType"])
         self.assertEqual({
             "AsopNo", "CustEmail", "MonsterEmail", "FileDate", "FileName", "MimeType",
             "Field1", "Field2", "Field3", "Field4", "Field5"

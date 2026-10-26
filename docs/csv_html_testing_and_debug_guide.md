@@ -141,25 +141,39 @@ CSV parsing flow:
 
 ```text
 CSV bytes
-  -> decode_csv_bytes()
-  -> detect_csv_separator()
+  -> decode_csv_bytes()                 cp1252 / utf-8 / latin-1
+  -> detect_csv_separator()             delimiter that splits the header row into the most columns
   -> csv.DictReader
-  -> get_column_mapping()
-  -> transform_csv_rows()
-  -> group by TIPO + FOLIO
-  -> build ERP-style payload
-  -> NavHeadToItem
-  -> NavHeadtoMeta
+  -> select_template()                  template in mappings.CSV_TEMPLATES whose markers are all in the header
+  -> get_column_mapping()               logical column -> header name (exact name, text before "(" ignored)
+  -> transform_csv_rows()               one row = one line item; no grouping
+  -> build_line_items()                 OCRItemno 10, 20, 30 ...
+  -> NavHeadToItem + NavHeadtoMeta      (metadata: sender email, file name ends in .eml)
+  -> build_erp_payload()                keyed by AddField1 (MASSCREATION)
 ```
+
+If the file cannot be read (no template matches, a bad date, a missing required column), the
+file is not dropped. It goes to ERP with `UNEXTRACTED` and `Status 52`, with its email in
+`NavHeadtoMeta`, the same as the HTML, PDF and Excel parsers.
+
+Adding a new CSV layout (business request): add one entry to `CSV_TEMPLATES` in
+`code/backend/apps/csv_parser/mappings.py` with its header markers and column names. No code change.
+Templates are tried in the order listed, so put a more specific template before a general one.
 
 Important CSV functions:
 
 ```text
-parse_latam_csv()
+parse_csv_po()            (parse_latam_csv is the old name, still works)
 decode_csv_bytes()
 detect_csv_separator()
-find_column()
+select_template()
+get_column_mapping()
 transform_csv_rows()
+build_line_items()
+parse_or_fail()
+failed_record()
+build_erp_payload()
+po_numbers_of()
 update_processed_values()
 csv_parsing_flow()
 ```
@@ -253,6 +267,31 @@ html-output.json
 csv-output.json
 ```
 
+### 1b. Production path with stand-ins (no HANA, Blob or ERP)
+
+This runs the real `csv_parsing_flow()` (HANA lookup, Blob read, parse, HANA update and the ERP
+decision). Only HANA, Blob and ERP are replaced by stand-ins that print what would be written or sent.
+
+Tool:
+
+```text
+code/backend/apps/csv_parser/debug_csv_local.py
+```
+
+Commands:
+
+```powershell
+.\.venv\Scripts\python.exe code\backend\apps\csv_parser\debug_csv_local.py "sample_inputs\latam\csv\Cargas Masivas_20-07-2026_Loginsa.csv"
+.\.venv\Scripts\python.exe code\backend\apps\csv_parser\debug_csv_local.py "sample_inputs\latam\csv\Cargas Masivas_20-07-2026_Ecsa.csv" --email client@example.com --out ecsa-payload.json
+.\.venv\Scripts\python.exe code\backend\apps\csv_parser\debug_csv_local.py "sample_inputs\latam\csv\Cargas Masivas_20-07-2026_Ecsa.csv" --push-to-erp
+```
+
+Options: `--email` (HANA sender_email), `--region`, `--file-type`, `--push-to-erp` (same as
+`TEMPLATE_PARSER_TEST_MODE=false`), `--out` (write the stored payload to a file), `--verbose`.
+
+It prints the line item count, the `po_numbers` stored in HANA, whether the ERP push was called, and
+the `erp_request_payload` that would be stored.
+
 ### 2. Local full-flow testing
 
 This simulates the `file_id -> metadata -> file -> parser -> output` pattern without real HANA or Blob Storage.
@@ -283,6 +322,7 @@ Tested sample files are stored in the repo under:
 ```text
 sample_inputs/latam/html/OCBD0125252.html
 sample_inputs/latam/csv/Cargas Masivas_20-07-2026_Loginsa.csv
+sample_inputs/latam/csv/Cargas Masivas_20-07-2026_Ecsa.csv
 ```
 
 Future sample templates can be added here:
@@ -489,11 +529,12 @@ code/backend/apps/csv_parser/csv_parse_handler.py
 Recommended functions:
 
 ```text
-parse_latam_csv()
-decode_csv_bytes()
+parse_csv_po()
 detect_csv_separator()
-find_column()
+select_template()
+get_column_mapping()
 transform_csv_rows()
+build_erp_payload()
 update_processed_values()
 csv_parsing_flow()
 ```
@@ -503,12 +544,15 @@ Watch variables:
 ```text
 text
 reader.fieldnames
+template_name
 columns
 rows
-grouped
 record
 NavHeadToItem
 ```
+
+To step through the whole production path without HANA, Blob or ERP, run
+`code/backend/apps/csv_parser/debug_csv_local.py` in the debugger (see section 1b).
 
 ### HTML breakpoints
 
@@ -818,9 +862,9 @@ Production algorithm:
 2. erp_data_fetch(connection, file_id)
 3. Read hana_data["file_path"]
 4. read_file_from_object_store(file_path)
-5. parse_latam_csv(content, hana_data)
-6. update_processed_values(final_output)
-7. hana_storage_push(file_id, connection, update_values)
+5. parse_or_fail(content, hana_data)      (parse_csv_po, or failed_record on error)
+6. build_erp_payload(final_output)       (AddField1 key, or UNEXTRACTED + Status 52)
+7. hana_storage_push(file_id, connection, update_processed_values(...))
 8. If TEMPLATE_PARSER_TEST_MODE=false, call push_to_erp(ocr_erp_push_url, file_id)
 ```
 
