@@ -145,8 +145,9 @@ def push_metadata_to_hana(metadata):
 
 
 def metadata_formatter(content, file_data):
-    
-    file_data["NavHeadtoMeta"][0]["Content"] = base64.b64encode(content).decode('utf-8')
+    # HTML payloads carry the metadata under HeadtoMeta, the other parsers under NavHeadtoMeta
+    metadata_key = "HeadtoMeta" if "HeadtoMeta" in file_data else "NavHeadtoMeta"
+    file_data[metadata_key][0]["Content"] = base64.b64encode(content).decode('utf-8')
 
     return file_data
 
