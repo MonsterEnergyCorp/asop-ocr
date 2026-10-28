@@ -2,7 +2,7 @@ replicaCount: 1
 image:
   repository: vishalsunilpatil/ocr-csv-parser
   pullPolicy: Always
-  tag: s4-dev-0606
+  tag: s4-ssn-0505
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
