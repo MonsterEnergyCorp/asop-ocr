@@ -41,6 +41,32 @@ PODOCTYPE = "HTML"
 # Normalized markers identify the line-item and totals tables in the HTML template.
 ITEM_HEADER_MARKERS = ("CANTIDAD", "UNIDAD", "DESCRIPC", "PRECIO", "IMPORTE")
 
+# ERP header and line item fields. The response always carries every one of these, set to "" when
+# the template does not fill it, so the shape is the same for every HTML template. A template fills a
+# header field with a header_fields rule and a line item field with an items columns entry - no code change.
+OUTPUT_HEADER_FIELDS = (
+    "AsopNo", "ShipRegion", "BillRegion", "Docnum", "SalesOrgCc", "Payer", "DocDate", "DlvDate",
+    "Vbeln", "TotalEach", "TotalCase", "Text", "Status", "SoStatus", "SoldZip", "SoldToName",
+    "SoldToCc", "SoldTo", "SoldStreet", "SoldRegion", "SoldCity", "ShipZip", "ShipToRegion",
+    "ShipToCountry", "ShipToCc", "ShipTo", "ShipStreet", "ShippingCond", "ShipName", "Shipinst",
+    "ShipCity", "ShipAddress", "SenderEmail", "SearchTerm", "SapAmount", "SalesZip", "SalesStreet",
+    "SalesOrg", "SalesName", "SalesDocType", "SalesCity", "SalesAddress", "Region", "Regio",
+    "Podoctype", "PODate", "PayTerm", "OrderReason", "OrderCode", "NewShipToAdd", "ItemCat",
+    "InternalOrder", "IncoTerm2", "IncoTerm", "Freight", "ErrorFlag", "DlvLocation", "DlvBlock",
+    "DistChan", "CustPoCc", "CustPo", "CustPhone", "CustEmail", "Currency", "CountryTemplate",
+    "CostCentre", "ContactName", "ContactAddress", "Consignee", "CommentS", "CarrierInst", "Bsark",
+    "Brand", "BillZip", "BillTo", "BillStreet", "BillName", "BillCity", "BillAddress", "Amount",
+    "Agent", "AddField5", "AddField4", "AddField3", "AddField2", "AddField1",
+)
+
+OUTPUT_ITEM_FIELDS = (
+    "AsopNo", "OCRItemno", "Material", "MaterialCC", "MatDesc", "Quantity", "QuantityCC", "Uom",
+    "UnitPrice", "ExtPrice", "DlvDate", "Plant", "ItmCat", "AddField1", "AddField2", "AddField3",
+    "AddField4", "AddField5", "Size1", "Pallet", "CustPo", "ShipTo", "SapPriceInd", "SalesDocType",
+    "SalesOrg", "SoldTo", "PODate", "TemplateInd", "POSTotalCost", "MatTextInd", "CustPOSuffix",
+    "POItemNo", "IncoTerm", "IncoTerm2", "ShippingCond",
+)
+
 # Same convention as the Excel parser: a file that cannot be read is sent to ERP with Status 52
 # and its metadata (which carries the email) under the key UNEXTRACTED.
 UNEXTRACTED_PO = "UNEXTRACTED"

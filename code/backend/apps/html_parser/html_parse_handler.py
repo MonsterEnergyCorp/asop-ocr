@@ -219,6 +219,8 @@ def extract_items(tables, asop_no, items_config):
                 "AsopNo": asop_no,
                 "OCRItemno": str(mappings.OCR_ITEM_NO_START + (index * 10)),
             }
+            for field in mappings.OUTPUT_ITEM_FIELDS:
+                item.setdefault(field, "")
             for field, column in items_config["columns"].items():
                 item[field] = row[column] if column < len(row) else ""
             column = items_config["description_column"]
@@ -264,6 +266,14 @@ def get_asop_no(file_data):
 # ---------------------------------------------------------------------------------------------
 # Parser entry points
 # ---------------------------------------------------------------------------------------------
+def copy_header_to_items(record):
+    """Line items get the header value of every ERP field they share with the header, unless the template filled it."""
+    for item in record["NavHeadToItem"]:
+        for field in mappings.OUTPUT_ITEM_FIELDS:
+            if not item.get(field) and record.get(field):
+                item[field] = record[field]
+
+
 def parse_html_po(content, file_data=None):
     """Parse an HTML purchase order with the template it matches (see mappings.HTML_TEMPLATES)."""
     file_data = file_data or {}
@@ -287,8 +297,11 @@ def parse_html_po(content, file_data=None):
         "Podoctype": template.get("podoctype", mappings.PODOCTYPE),
     }
     record.update(extract_header(template, full_text, raw_text))
+    for field in mappings.OUTPUT_HEADER_FIELDS:
+        record.setdefault(field, "")
     record["NavHeadToItem"] = extract_items(parser.tables, asop_no, template["items"])
-    record["NavHeadtoMeta"] = [default_metadata(file_data, asop_no)]
+    copy_header_to_items(record)
+    record["HeadtoMeta"] = [default_metadata(file_data, asop_no)]
     return record
 
 
@@ -304,7 +317,7 @@ def failed_record(file_data):
         "AsopNo": asop_no,
         "CustPo": mappings.UNEXTRACTED_PO,
         "NavHeadToItem": [],
-        "NavHeadtoMeta": [default_metadata(file_data, asop_no)],
+        "HeadtoMeta": [default_metadata(file_data, asop_no)],
     }
 
 
@@ -325,7 +338,7 @@ def build_erp_payload(final_output):
     if final_output.get("CustPo") == mappings.UNEXTRACTED_PO or not final_output.get("NavHeadToItem"):
         return {mappings.UNEXTRACTED_PO: {
             "Status": mappings.FAILURE_STATUS,
-            "NavHeadtoMeta": final_output["NavHeadtoMeta"],
+            "HeadtoMeta": final_output["HeadtoMeta"],
         }}
     return {final_output["CustPo"]: final_output}
 

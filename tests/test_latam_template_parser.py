@@ -1,10 +1,13 @@
+import copy
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 BACKEND_PATH = Path(__file__).resolve().parents[1] / "code" / "backend"
 sys.path.insert(0, str(BACKEND_PATH))
 from apps.csv_parser.csv_parse_handler import parse_latam_csv
+from apps.html_parser import mappings
 from apps.html_parser.html_parse_handler import decode_html_bytes, parse_latam_html
 
 
@@ -67,38 +70,36 @@ class LatamTemplateParserTests(unittest.TestCase):
         })
 
         record = result
-        self.assertEqual({
-            "AsopNo",
-            "Region",
-            "Podoctype",
-            "CustPo",
-            "PODate",
-            "DlvDate",
-            "SalesOrg",
-            "SoldTo",
-            "ShipTo",
-            "NavHeadToItem",
-            "NavHeadtoMeta"
-        }, set(record))
+        self.assertEqual(set(mappings.OUTPUT_HEADER_FIELDS) | {"NavHeadToItem", "HeadtoMeta"}, set(record))
         self.assertEqual("HTML", record["Podoctype"])
         self.assertEqual("2026-06-30", record["PODate"])
         self.assertEqual("2026-06-30", record["DlvDate"])
         self.assertEqual("MONSTER ENERGY DOMINICAN REPUBLIC SRL", record["SalesOrg"])
         self.assertEqual("E081003503", record["NavHeadToItem"][0]["Material"])
-        self.assertEqual({
-            "AsopNo",
-            "OCRItemno",
-            "Quantity",
-            "Uom",
-            "Material",
-            "MatDesc"
-        }, set(record["NavHeadToItem"][0]))
-        self.assertNotIn("UnitPrice", record["NavHeadToItem"][0])
+        self.assertEqual(set(mappings.OUTPUT_ITEM_FIELDS), set(record["NavHeadToItem"][0]))
+        self.assertEqual("", record["NavHeadToItem"][0]["UnitPrice"])
+        self.assertEqual("OCBD0125252", record["NavHeadToItem"][0]["CustPo"])
+        self.assertEqual("2026-06-30", record["NavHeadToItem"][0]["DlvDate"])
+        self.assertEqual("Bepensa Dominicana S.A.", record["NavHeadToItem"][0]["SoldTo"])
         self.assertNotIn("Amount", record["NavHeadToItem"][0])
-        self.assertEqual("2026-09-21", record["NavHeadtoMeta"][0]["FileDate"])
+        self.assertEqual("2026-09-21", record["HeadtoMeta"][0]["FileDate"])
         self.assertNotIn("Subtotal", record)
         self.assertNotIn("IVA", record)
         self.assertNotIn("Total", record)
+
+    def test_html_template_fills_a_new_field_and_other_new_fields_stay_blank(self):
+        html_content = b"<html><body>Orden de compra: PO-123 Folio de solicitud de compra : REQ-0128109</body></html>"
+        templates = copy.deepcopy(mappings.HTML_TEMPLATES)
+        templates["LATAM_PO_ES"]["header_fields"].append(
+            {"field": "Docnum", "rule": "regex", "pattern": r"Folio de solicitud de compra\s*:?\s*(REQ-\d+)"}
+        )
+        with mock.patch.object(mappings, "HTML_TEMPLATES", templates):
+            record = parse_latam_html(html_content, {"file_name": "sample.html", "file_type": "text/html"})
+
+        self.assertEqual("REQ-0128109", record["Docnum"])
+        self.assertEqual("PO-123", record["CustPo"])
+        self.assertEqual("", record["SalesDocType"])
+        self.assertEqual(set(mappings.OUTPUT_HEADER_FIELDS) | {"NavHeadToItem", "HeadtoMeta"}, set(record))
 
     def test_parse_latam_html_uses_asop_and_region_from_metadata(self):
         html_content = b"<html><body>Orden de compra: PO-123</body></html>"
@@ -113,7 +114,7 @@ class LatamTemplateParserTests(unittest.TestCase):
         record = result
         self.assertEqual("ASOP-123", record["AsopNo"])
         self.assertEqual("LATAM", record["Region"])
-        self.assertEqual("ASOP-123", record["NavHeadtoMeta"][0]["AsopNo"])
+        self.assertEqual("ASOP-123", record["HeadtoMeta"][0]["AsopNo"])
 
 
 if __name__ == "__main__":
