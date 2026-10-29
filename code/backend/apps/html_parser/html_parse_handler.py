@@ -375,5 +375,9 @@ def html_parsing_flow(file_id):
         close_connection(connection)
     # ERP publishing is opt-in after the DEV/UAT payload review.
     if not config.template_parser_test_mode:
-        push_to_erp(config.ocr_erp_push_url, file_id)
+        logging.info("HTML ERP PUSH: sending file_id %s to %s", file_id, config.ocr_erp_push_url)
+        response = push_to_erp(config.ocr_erp_push_url, file_id)
+        logging.info("HTML ERP PUSH: ERP answered %s for file_id %s", response.status_code, file_id)
+    else:
+        logging.info("HTML ERP PUSH: skipped, TEMPLATE_PARSER_TEST_MODE is on (file_id %s)", file_id)
     return final_output
