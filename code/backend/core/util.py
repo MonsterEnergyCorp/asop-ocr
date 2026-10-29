@@ -130,7 +130,9 @@ def push_to_erp(url, file_id):
     try:
         file_path = file_id
         payload = {"file_id": file_path}
+        logging.info(f"Sending file_id {file_path} to ERP push {url}")
         response = requests.post(url, data=json.dumps(payload))
+        logging.info(f"ERP push answered HTTP {response.status_code} for file_id {file_path}")
         return response
     except Exception as e:
         logging.error(f'Error pushing file to erp push pod: {e}')

@@ -13,6 +13,7 @@ env = config.env
 def init_routers(app_: FastAPI) -> None:
     @app_.post(f"/{env}/ocr/erp-push")
     async def erp_push(data: dict):
+        logging.info(f"ERP push request received for file_id {data.get('file_id')}")
         result = publish_to_erp(data)
         return {"message": "File pushed", "data": result}
     

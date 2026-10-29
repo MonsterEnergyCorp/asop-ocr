@@ -100,7 +100,9 @@ def pdf_call_to_erp(payload, po_no, file_content):
     final_payload = metadata_formatter(file_content, payload)
     # Will be passing the payload to the ERP system under here when the SAP OCC endpoint is available
     # JSON Dumps the final payload
+    logging.info(f'Calling SAP for PDF {po_no}: {odata_url}')
     response = push_to_erp(odata_url, payload)
+    logging.info(f'SAP answered for PDF {po_no}: {response}')
     if response != success_status:
         failures[po_no] = response
         logging.info(f'Failures: {failures}')
@@ -121,7 +123,9 @@ def excel_call_to_erp(payload, content, hana_data):
     for k,v in payload.items():
         logging.info(f'Payload for {k}: {v}')
         v = metadata_formatter(content, v)
+        logging.info(f'Calling SAP for {k}: {odata_url}')
         response = push_to_erp(odata_url, v)
+        logging.info(f'SAP answered for {k}: {response}')
         if response != success_status:
             failures[k] = response
             logging.info(f'Failures: {failures}')
@@ -167,6 +171,7 @@ def publish_to_erp(data: dict):
         file_path = hana_data["eml_file_path"]
         content = read_file_from_object_store(file_path)
         file_type = hana_data.get("file_type")
+        logging.info(f'ERP publish start: file_id={file_id}, file_type={file_type}, payload keys={list(payload.keys())}')
         if file_type == "application/pdf":
             po_no = hana_data.get("po_numbers")
             status, failures = pdf_call_to_erp(payload, po_no, content)
@@ -187,6 +192,8 @@ def publish_to_erp(data: dict):
         logging.info(f'Error fetching erp payload: {e}')
         logging.info(f'Traceback: {traceback.format_exc()}')
         raise HTTPException(status_code=400, detail='Error fetching erp payload')
-    return failures if failures else "Success"
+    result = failures if failures else "Success"
+    logging.info(f'ERP publish end: file_id={file_id}, result={result}')
+    return result
 
 
