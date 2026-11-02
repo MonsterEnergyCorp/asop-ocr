@@ -91,6 +91,7 @@ def upload_invoice_file(data: dict):
             data = processed_data
         # Continue with existing processing flow
         file_content = decode(data)
+        logging.info(f"Ingest start: file_id={data.get('file_id')}, file_name={data.get('file_name')}, file_type={data.get('file_type')}, region={data.get('region')}")
         # Get file name, content type and sender email
         sender_email = data.get('sender_email', '')
         file_name = data.get('file_name', '')
@@ -100,7 +101,9 @@ def upload_invoice_file(data: dict):
         # Check content_type
         content_type, data = get_attachment_content_type(data)
         file_type_folder, error_response = get_file_type(content_type)
+        logging.info(f"Ingest content type: {content_type} -> {file_type_folder}")
         if error_response is not None:
+            logging.info(f"Ingest rejected: {error_response}")
             return {"status_code": 400, "message": error_response}
 
         if file_type_folder == 'pdf':
@@ -112,6 +115,7 @@ def upload_invoice_file(data: dict):
             tmp_file = tempfile.NamedTemporaryFile(mode='w+b')
             tmp_file.write(file_content)
             response = pdf_validate_push_to_storage(document_no, tmp_file, file_path, content_type, data)
+            logging.info(f"Ingest: sending PDF to parser {ocr_pdf_url} for file_id={document_no}")
             push_to_parsers(ocr_pdf_url, document_no)
             tmp_file.close()
 
@@ -132,8 +136,10 @@ def upload_invoice_file(data: dict):
                 'message': f'file {file_name} uploaded to blob storage',
                 'document_no': document_no
             }
+            logging.info(f"Ingest: stored in blob at {file_path} for file_id={document_no}")
             data=add_audit_fields(data)
             hana_storage_insert(data)
+            logging.info(f"Ingest: row inserted in HANA for file_id={document_no}")
             parser_url = {
                 'spreadsheet': ocr_csv_url,
                 'csv': ocr_latam_csv_url or ocr_latam_template_url,
@@ -141,6 +147,7 @@ def upload_invoice_file(data: dict):
             }.get(file_type_folder)
             if not parser_url:
                 raise RuntimeError(f'No parser URL configured for {file_type_folder}')
+            logging.info(f"Ingest: sending {file_type_folder} to parser {parser_url} for file_id={document_no}")
             push_to_parsers(parser_url, document_no)
             tmp_file.close()
 
@@ -149,7 +156,7 @@ def upload_invoice_file(data: dict):
         logging.info(f"File already ingested in OCR")
         return {"status_code": 400, "message" : "File already ingested in OCR"}
     except Exception as e:
-        logging.error('Runtime error: ', e)
+        logging.exception(f"Ingest failed: {e}")
         response = {"status_code": 500, "message" : f'Error Processing request - {e}'}
 
     return response
@@ -168,9 +175,10 @@ def push_to_parsers(url, file_id):
         payload = {"file_id": file_path}
         response = requests.post(url, json=payload, timeout=30)
         response.raise_for_status()
+        logging.info(f"Parser answered HTTP {response.status_code} for file_id={file_id} at {url}")
         return response
     except Exception as e:
-        logging.error(f'Error pushing file to parser: {e}')
+        logging.error(f'Error pushing file {file_id} to parser {url}: {e}')
         raise HTTPException(status_code=400, detail='Error pushing file to parser')
 
 def decode(data):

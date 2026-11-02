@@ -4,6 +4,7 @@ from fastapi.middleware import Middleware
 from fastapi import HTTPException
 from apps.ingest_documents.ocr_ingest_doc import upload_invoice_file
 from typing import List
+import logging
 from core.config import config
 from core.constants import SUPPORTED_FILE_TYPES
 
@@ -14,7 +15,9 @@ def init_routers(app_: FastAPI) -> None:
     async def upload_pdf(data: dict):
         if data.get('data',{}).get('file_type') not in SUPPORTED_FILE_TYPES:
             raise HTTPException(status_code=400, detail="Invalid file type.")
+        logging.info(f"Ingest request received: file_type={data.get('data', {}).get('file_type')}, file_id={data.get('file_id')}")
         result = upload_invoice_file(data)
+        logging.info(f"Ingest request answered: status_code={result.get('status_code')}, file_id={data.get('file_id')}")
         return {"message": "File ingested successfully", "data": result}
 
     if config.ingest_public_path and config.ingest_public_path != f"/{env}/ocr/ingest":
