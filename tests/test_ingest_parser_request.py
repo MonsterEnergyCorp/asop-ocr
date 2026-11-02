@@ -74,11 +74,11 @@ class IngestParserRequestTests(unittest.TestCase):
         self.assertEqual({"POST"}, routes[public_path].methods)
         payload = {"data": {"file_type": "text/html"}, "region": "LATAM"}
         with patch.object(ingest_server, "upload_invoice_file", return_value={"status_code": 200}) as upload:
-            result = asyncio.run(endpoint(payload))
+            result = endpoint(payload)
             upload.assert_called_once_with(payload)
             self.assertEqual(200, result["data"]["status_code"])
             with self.assertRaises(ingest_server.HTTPException) as raised:
-                asyncio.run(endpoint({"data": {"file_type": "invalid"}}))
+                endpoint({"data": {"file_type": "invalid"}})
             self.assertEqual(400, raised.exception.status_code)
             upload.assert_called_once()
 

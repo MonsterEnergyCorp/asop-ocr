@@ -12,7 +12,9 @@ env = config.env
 
 def init_routers(app_: FastAPI) -> None:
     @app_.post(f"/{env}/ocr/ingest")
-    async def upload_pdf(data: dict):
+    # plain def (not async): the upload does blocking Blob/HANA/parser calls, so FastAPI runs it in a
+    # worker thread and the health check keeps answering while uploads run
+    def upload_pdf(data: dict):
         if data.get('data',{}).get('file_type') not in SUPPORTED_FILE_TYPES:
             raise HTTPException(status_code=400, detail="Invalid file type.")
         logging.info(f"Ingest request received: file_type={data.get('data', {}).get('file_type')}, file_id={data.get('file_id')}")
