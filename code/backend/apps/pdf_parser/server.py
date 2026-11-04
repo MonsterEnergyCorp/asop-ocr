@@ -11,7 +11,9 @@ env = config.env
 
 def init_routers(app_: FastAPI) -> None:
     @app_.post(f"/{env}/parse/pdf")
-    async def upload_pdf(data: dict):
+    # plain def (not async): pdf_parsing_flow waits on SAP Document AI with time.sleep, so FastAPI runs
+    # it in a worker thread and other requests are not blocked while one PDF is being polled
+    def upload_pdf(data: dict):
         result = pdf_parsing_flow(data)
         return {"message": "File processed successfully", "data": result}
     
