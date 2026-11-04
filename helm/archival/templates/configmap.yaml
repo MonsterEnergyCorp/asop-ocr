@@ -6,4 +6,5 @@ metadata:
     {{- include "archival.labels" . | nindent 4 }}
 data:
   ARCHIVAL_PERIOD_DAYS: "{{ .Values.ARCHIVAL_PERIOD_DAYS }}"
+  ARCHIVAL_DRY_RUN: "{{ .Values.ARCHIVAL_DRY_RUN }}"
   ENV: "{{ .Values.env }}"

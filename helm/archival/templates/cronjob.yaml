@@ -6,6 +6,7 @@ metadata:
     {{- include "archival.labels" . | nindent 4 }}
 spec:
   schedule: {{ .Values.schedule | quote }}
+  concurrencyPolicy: {{ .Values.concurrencyPolicy }}
   jobTemplate:
     spec:
       template:

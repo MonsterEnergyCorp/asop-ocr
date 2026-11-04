@@ -23,6 +23,7 @@ resources:
 
 env: 'dev'
 ARCHIVAL_PERIOD_DAYS: "3"
+ARCHIVAL_DRY_RUN: "false"
 
 secret:
   name: ocr
