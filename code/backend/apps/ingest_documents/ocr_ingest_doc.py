@@ -1,4 +1,4 @@
-import json, pikepdf, requests, os, tempfile, uuid, logging, base64
+import json, pikepdf, requests, os, tempfile, uuid, logging, base64, threading
 from datetime import datetime
 from fastapi import UploadFile, HTTPException
 from core.azure_storage.blob_storage_connection import *
@@ -25,11 +25,27 @@ ocr_latam_csv_url = config.ocr_latam_csv_url
 ocr_latam_html_url = config.ocr_latam_html_url
 env = config.env
 
-class DuplicateException(Exception):
-    pass
 
+# One lock per file_id, so two identical sends at the same moment cannot both pass the duplicate check
+_file_locks = {}
+_file_locks_guard = threading.Lock()
+
+def get_file_lock(file_id):
+    with _file_locks_guard:
+        return _file_locks.setdefault(file_id, threading.Lock())
 
 def upload_invoice_file(data: dict):
+    # Duplicate check for both input shapes. It runs under the file_id lock, so the row is stored before the next check.
+    file_id = data.get('file_id', '')
+    if not file_id:
+        return process_upload(data)
+    with get_file_lock(file_id):
+        if check_for_existing_process(file_id):
+            logging.info(f"File already ingested in OCR: file_id={file_id}")
+            return {"status_code": 400, "message": "File already ingested in OCR"}
+        return process_upload(data)
+
+def process_upload(data: dict):
     """
     Uploads a PO file and processes it based on its type (PDF or CSV).
     Now also handles eml_data from the new input structure.
@@ -56,9 +72,6 @@ def upload_invoice_file(data: dict):
             processed_data['region'] = region
             file_id = data.get('file_id','')
             processed_data['file_id'] = file_id
-            duplicate_check = check_for_existing_process(file_id)
-            if duplicate_check:
-                raise DuplicateException
 
             # Handle eml data if present
             if inner_data.get('eml_data'):
@@ -152,9 +165,6 @@ def upload_invoice_file(data: dict):
             tmp_file.close()
 
             return {"status_code": 200, "message" : response}
-    except DuplicateException:
-        logging.info(f"File already ingested in OCR")
-        return {"status_code": 400, "message" : "File already ingested in OCR"}
     except Exception as e:
         logging.exception(f"Ingest failed: {e}")
         response = {"status_code": 500, "message" : f'Error Processing request - {e}'}
