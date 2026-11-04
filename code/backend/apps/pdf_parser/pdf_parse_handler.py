@@ -94,8 +94,8 @@ def upload_document(auth_token, upload_url, schema_id, client_id, pdf_bytes, fil
     headers = {"Authorization": f"Bearer {auth_token}"}
     response = requests.post(upload_url, data=payload, files=files, headers=headers)
     json_response = response.json()
-    logging.info(f'PDF Upload Response: {json_response}')
     job_id = json_response["id"]
+    logging.info("PDF uploaded to OCR: http_status=%s job_id=%s size_bytes=%s", response.status_code, job_id, len(pdf_bytes))
     return job_id
 
 
@@ -115,28 +115,39 @@ def document_status(auth_token, get_status_url, job_id, client_id, delete_url):
         "content-type": "multipart/form-data; boundary=---011000010111000001101001"
     }
     status = "PENDING"
-    # intervals = [10, 5, 5, 5, 3, 3, 3]  # Intervals in seconds
-    intervals = [10, 5, 5, 5, 3, 3, 3,3,3,3,3,4]  
+    intervals = [10, 5, 5, 5, 3, 3, 3, 3, 3, 3, 3, 4] + [10] * 7
+    poll_started_at = time.monotonic()
+    logging.info("Starting OCR status polling: job_id=%s max_wait_seconds=%s poll_count=%s", job_id, sum(intervals), len(intervals))
 
-    for interval in intervals:
+    for attempt, interval in enumerate(intervals, start=1):
         time.sleep(interval)  # Wait for the specified interval
         response = requests.post(get_status_url, data=payload, headers=headers)
         json_response = response.json()
-        logging.info(f'FETCH API RESPONSE: {json_response}')
         status = json_response["results"][0]["status"]
+        elapsed_seconds = time.monotonic() - poll_started_at
+        logging.info(
+            "OCR status poll: job_id=%s attempt=%s/%s http_status=%s status=%s elapsed_seconds=%.1f",
+            job_id, attempt, len(intervals), response.status_code, status, elapsed_seconds
+        )
         
         if status == "DONE":
+            logging.info("OCR job completed: job_id=%s elapsed_seconds=%.1f", job_id, elapsed_seconds)
             return True
 
     # If status is still not "DONE" after all intervals, call the DELETE API
     if status != "DONE":
+        elapsed_seconds = time.monotonic() - poll_started_at
+        logging.warning(
+            "OCR polling window expired: job_id=%s final_status=%s elapsed_seconds=%.1f; deleting job",
+            job_id, status, elapsed_seconds
+        )
         payload = json.dumps({"value": [job_id]})
         headers = {"Authorization": "Bearer " + auth_token}
         delete_response = requests.delete(delete_url, data=payload, headers=headers)
         if delete_response.status_code == 200:
-            logging.info(f"Resource {job_id} deleted successfully.")
+            logging.info("OCR job deleted after polling timeout: job_id=%s", job_id)
         else:
-            logging.info(f"Failed to delete resource. Response: {delete_response.text}")
+            logging.warning("OCR job deletion failed: job_id=%s http_status=%s", job_id, delete_response.status_code)
         return False    
 
 
@@ -155,6 +166,7 @@ def parsed_results(upload_url, auth_token, job_id):
     response = requests.get(url, headers=headers)
     json_response = response.json()
     extracted_data = json_response["extraction"]
+    logging.info("OCR results retrieved: job_id=%s http_status=%s", job_id, response.status_code)
     return extracted_data, json_response
 
 
@@ -382,6 +394,7 @@ def pdf_parsing_flow(data):
     """
     connection = connect_to_db()
     file_id = data['file_id']
+    logging.info("PDF parsing started: file_id=%s", file_id)
     # Functions to process the pdf through the SAP OCR
     auth_token = get_auth_token(app_id, client_secret, auth_token_url)
     client_id = get_clients(auth_token, get_clients_url)
@@ -391,8 +404,10 @@ def pdf_parsing_flow(data):
     global schema_id
     schema_id = get_schema_id(region)
     content = read_file_from_object_store(file_path)
+    logging.info("PDF loaded: file_id=%s region=%s size_bytes=%s", file_id, region, len(content))
     job_id = upload_document(auth_token, doc_upload_url, schema_id, client_id, content, file_path)
     if document_status(auth_token, status_url, job_id, client_id, doc_upload_url):
+        logging.info("OCR extraction ready: file_id=%s job_id=%s", file_id, job_id)
         pdf_output, raw_output = parsed_results(doc_upload_url, auth_token, job_id)
         # Functions to format the output and push to Hana DB
         formatted_output = output_formatter(pdf_output)
@@ -400,18 +415,19 @@ def pdf_parsing_flow(data):
         hana_data = erp_data_fetch(connection, file_id)
         erp_payload = metadata_formatter(hana_data, cleaned_output)
         # Update the processed values in Hana DB
-        logging.info(f"Formatted output: {erp_payload}")
+        logging.info("OCR output formatted: file_id=%s payload_keys=%s", file_id, sorted(erp_payload.keys()))
         ocr_update_values = update_processed_values(erp_payload, raw_output)
     else:
         hana_data = erp_data_fetch(connection, file_id)
         erp_payload = metadata_formatter(hana_data, {})
         erp_payload["Status"] = "52"
-        logging.info(f"Formatted Metadata output: {erp_payload}")   
+        logging.warning("Using OCR timeout fallback: file_id=%s status=52", file_id)
         ocr_update_values = update_processed_values(erp_payload, {}, False)
     hana_storage_push(file_id, connection, ocr_update_values)
-    logging.info(f"ERP Request payload uploaded to Hana DB")
+    logging.info("OCR payload stored in HANA: file_id=%s", file_id)
     close_connection(connection)
-    logging.info(f"Connection Closed.")
+    logging.info("HANA connection closed: file_id=%s", file_id)
+    logging.info("Calling ERP push service: file_id=%s", file_id)
     push_to_erp(ocr_erp_push_url, file_id)
-    logging.info(f"Pushed to ERP")
+    logging.info("ERP push service call returned: file_id=%s", file_id)
     return erp_payload
