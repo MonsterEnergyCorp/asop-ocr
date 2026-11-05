@@ -95,7 +95,7 @@ def upload_document(auth_token, upload_url, schema_id, client_id, pdf_bytes, fil
     response = requests.post(upload_url, data=payload, files=files, headers=headers)
     json_response = response.json()
     job_id = json_response["id"]
-    logging.info("PDF uploaded to OCR: http_status=%s job_id=%s size_bytes=%s", response.status_code, job_id, len(pdf_bytes))
+    logging.info("PDF uploaded to OCR: http_status=%s job_id=%s file_name=%s size_bytes=%s", response.status_code, job_id, filename, len(pdf_bytes))
     return job_id
 
 
@@ -138,7 +138,7 @@ def document_status(auth_token, get_status_url, job_id, client_id, delete_url):
     if status != "DONE":
         elapsed_seconds = time.monotonic() - poll_started_at
         logging.warning(
-            "OCR polling window expired: job_id=%s final_status=%s elapsed_seconds=%.1f; deleting job",
+            "SAP Document AI TIMEOUT: job_id=%s last_status=%s waited_seconds=%.1f; deleting the SAP job",
             job_id, status, elapsed_seconds
         )
         payload = json.dumps({"value": [job_id]})
@@ -421,7 +421,10 @@ def pdf_parsing_flow(data):
         hana_data = erp_data_fetch(connection, file_id)
         erp_payload = metadata_formatter(hana_data, {})
         erp_payload["Status"] = "52"
-        logging.warning("Using OCR timeout fallback: file_id=%s status=52", file_id)
+        logging.warning(
+            "SAP Document AI TIMEOUT for file_id=%s file_name=%s size_bytes=%s: no OCR data, sending Status 52 to ERP",
+            file_id, file_path, len(content)
+        )
         ocr_update_values = update_processed_values(erp_payload, {}, False)
     hana_storage_push(file_id, connection, ocr_update_values)
     logging.info("OCR payload stored in HANA: file_id=%s", file_id)
