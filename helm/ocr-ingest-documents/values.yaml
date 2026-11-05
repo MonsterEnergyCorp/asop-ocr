@@ -87,7 +87,7 @@ env: 'dev'
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
-  publicPath: /s4-ssn/ocr/ingest
+  publicPath: /s4-qa/ocr/ingest
   annotations:
     cert-manager.io/issuer: ocr-cert-issuer
     nginx.ingress.kubernetes.io/cors-allow-origin: '*'
@@ -101,7 +101,7 @@ ingress:
   hosts:
   - host: api.nonprod.ocr.monsterenergy.com
     paths:
-    - path: /s4-ssn/ocr/ingest
+    - path: /s4-qa/ocr/ingest
       pathType: Exact
   tls:
   - hosts:
