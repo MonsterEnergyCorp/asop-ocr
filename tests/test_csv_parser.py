@@ -162,6 +162,22 @@ class CsvParserTests(unittest.TestCase):
     def test_semicolon_wins_when_header_has_commas_inside_legends(self):
         self.assertEqual(";", detect_csv_separator(ECSA_FILE.read_bytes().decode("cp1252")))
 
+    def test_header_legends_with_unbalanced_quote_do_not_break_the_columns(self):
+        # Same header pattern as the new_file.csv sample: legends with ';' and ',', a stray quote in UNIDADMEDIDA(...)
+        content = (
+            '"TIPO (33: Factura, 39: Boleta; 41: Boleta exenta );FOLIO;SECUENCIA;FECHA;RUT;RAZONSOCIAL;GIRO;COMUNA;'
+            'DIRECCION;PRODUCTO;CANTIDAD;CODITEM;UNIDADMEDIDA(HR", KG, UNID);COMUNADESTINO;DIRECCIONDESTINO\n'
+            "52;1;1;20-10-2026;93281000-K;Acme;Bebidas;ARICA;Av 1;Monster;4;M1;UNID;CONCON;Calle 2\n"
+        )
+        result = parse_csv_po(content.encode("utf-8"), FILE_DATA)
+        item = result["NavHeadToItem"][0]
+
+        self.assertEqual("52;1;1", item["CsvNO"])
+        self.assertEqual("Monster", item["MatDesc"])
+        self.assertEqual("UNID", item["Uom"])
+        self.assertEqual("CONCON", item["ShipCity"])
+        self.assertEqual("Calle 2", item["ShipTo"])
+
 
 if __name__ == "__main__":
     unittest.main()

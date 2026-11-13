@@ -57,6 +57,18 @@ def decode_csv_bytes(content):
     return content.decode("utf-8", errors="replace")
 
 
+def strip_header_legends(text):
+    # Header names are the text before the legends: "TIPO (33: Factura, 34: ...)" is "TIPO".
+    # The legends hold ';' and ',' and sometimes unbalanced quotes, which break the split of the header.
+    lines = text.splitlines(keepends=True)
+    for index, line in enumerate(lines):
+        if line.strip():
+            body = line.rstrip("\r\n")
+            lines[index] = re.sub(r"\([^()]*\)", "", body).replace('"', "") + line[len(body):]
+            break
+    return "".join(lines)
+
+
 def detect_csv_separator(text):
     # The header row decides: the delimiter that splits it into the most columns wins.
     # csv.Sniffer is not used because the commas inside the header legends confuse it.
@@ -189,7 +201,7 @@ def parse_csv_po(content, file_data=None):
     """Parse a CSV PO file with the template it matches (see mappings.CSV_TEMPLATES)."""
     file_data = file_data or {}
     asop_no = get_asop_no(file_data)
-    text = decode_csv_bytes(content)
+    text = strip_header_legends(decode_csv_bytes(content))
     reader = csv.DictReader(io.StringIO(text), delimiter=detect_csv_separator(text))
     if not reader.fieldnames:
         raise ValueError("The CSV file does not contain a header row.")
