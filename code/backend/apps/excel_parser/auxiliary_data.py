@@ -34,7 +34,8 @@ data_dimensions={
     "SalesDocType": "singular",
     "SoldToName": "singular",
     "ShippingCond": "singular",
-    "ItemCat": "singular"
+    "ItemCat": "singular",
+    "Currency": "singular"
 }
 
 data_mapping = {
@@ -408,7 +409,13 @@ regional_options = {
         "default_uom": "",
         "quantity_thousands": True,
         "header_fields": {"AsopNo": "0000000000", "Podoctype": "EXCEL", "Region": "APAC"},
-    }
+    },
+    # Chile Andina: the form has no Sold-To, Sales Org or Order Type values, so these stay blank
+    "CHILE_ANDINA": {
+        "party_blocks": True,  # BillTo/ShipTo = customer number; address lines without it
+        "keep_line_spacing": True,  # address text kept as written in the cell
+        "header_fields": {"SoldTo": "", "SalesOrg": "", "SalesDocType": ""},
+    },
 }
 
 # 5. Template recognition. The region on a file comes from the mailbox/blob folder (us / emea / latam),
@@ -420,4 +427,65 @@ template_region_markers = {
         ["PO#(required)订单号"],                                        # China FG PO
         ["BILLTO:", "SHIPTO:", "Soldto", "OrderType", "SalesOrg"],      # Macau FG PO
     ],
+    # Chile Andina FG order form: BILL TO / SHIP TO without colons, no Sold-To label
+    "CHILE_ANDINA": [
+        ["BILLTO", "SHIPTO", "TypeofProduct", "Cases/Pallet"],
+    ],
+}
+
+# ---------------------------------------------------------------------------
+# Cambodia KIT order form (Monster Energy Concentrate Order Form) - parameters only.
+# The layout is the same for every order; only the values change. Recognised by its own labels
+# (MEC SKU#, MEC Sold-To, ...), so other sheets are processed exactly as before.
+# ---------------------------------------------------------------------------
+CAMBODIA_KIT = "CAMBODIA_KIT_ORDER"
+
+# Labels (spaces removed) -> ERP fields
+regional_map_lvl1[CAMBODIA_KIT] = {
+    "MECSKU#": "Material",
+    "SKUDescription": "MatDesc",
+    "RequestedDeliveryDateMM/DD/YYYY": "DlvDate",
+    "MECSold-To": "SoldTo",
+    "MECBill-To": "BillTo",
+    "MECShip-To": "ShipTo",
+    "OrderType:": "SalesDocType",
+    "ItemCategory:": "ItemCat",
+    "ShippingCondition:": "ShippingCond",
+    "Currency:": "Currency",
+}
+
+# Extra labels the sheet scan must recognise (also act as stop markers) - only for this template
+regional_keys[CAMBODIA_KIT] = [
+    "MECSKU#",
+    "SKUDescription",
+    "RequestedDeliveryDateMM/DD/YYYY",
+    "MECSold-To",
+    "MECBill-To",
+    "MECShip-To",
+    "MECPayer:",
+    "OrderType:",
+    "ItemCategory:",
+    "ShippingCondition:",
+    "Currency:",
+    "Ship-ToAddress:",
+]
+
+# Line item columns: existing "Other" columns + delivery date and customer PO (PO is then taken from the lines)
+tabular_keys[CAMBODIA_KIT] = {"Material": [*tabular_keys["Other"]["Material"], "DlvDate", "CustPo"]}
+
+# Template recognition by its own labels
+template_region_markers[CAMBODIA_KIT] = [
+    ["MECSKU#", "MECSold-To", "MECShip-To", "MECBill-To"],
+]
+
+regional_options[CAMBODIA_KIT] = {
+    "party_blocks": True,                     # MEC Ship-To / Bill-To: customer number only
+    "default_uom": "",                        # the form has no unit column
+    "tabular_date_fields": ["DlvDate"],       # Excel dates -> YYYY-MM-DD
+    "split_inco_term": True,                  # "CIF Sihanoukvile" -> IncoTerm "CIF", IncoTerm2 "Sihanoukvile"
+    "address_block": {                        # Ship-To name and address: the cells to the right of the label
+        "label": "Ship-ToAddress:",
+        "name_field": "ShipName",
+        "address_field": "ShipAddress",
+    },
 }

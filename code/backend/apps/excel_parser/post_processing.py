@@ -33,19 +33,22 @@ def has_cjk(text):
     """True if the text contains Chinese/Japanese/Korean characters or full-width symbols."""
     return bool(re.search(r"[\u3000-\u9fff\uff00-\uffef]", text))
 
-def process_numbered_party_blocks(header_data):
+def process_numbered_party_blocks(header_data, keep_line_spacing=False):
     """
     BILL TO / SHIP TO laid out as a block: customer number, then name/address lines.
     [1007430, 'Shanghai Shenmei ...', '<chinese line>'] -> BillTo = '1007430', BillAddress = 'Shanghai Shenmei ...'
     Lines with Chinese characters are left out.
+    keep_line_spacing: keep the address line text as written (no trimming of its spaces).
     """
     for party in ("Bill", "Ship"):
         values = header_data.get(f"{party}To")
         if not isinstance(values, list):
             continue
-        values = [str(v).strip() for v in values if v is not None and str(v).strip()]
-        number = values[0] if values and values[0].replace(".0", "").isdigit() else ""
+        values = [str(v) for v in values if v is not None and str(v).strip()]
+        number = values[0].strip() if values and values[0].strip().replace(".0", "").isdigit() else ""
         address_lines = values[1:] if number else values
+        if not keep_line_spacing:
+            address_lines = [line.strip() for line in address_lines]
         address_lines = [line for line in address_lines if not has_cjk(line)]
         header_data[f"{party}To"] = number.replace(".0", "") if number else ""
         if address_lines:
@@ -118,6 +121,15 @@ def convert_date_format(date_str):
     # If none of the formats match, raise an error
     return ""
 
+def split_inco_term(header_data):
+    """"CIF Sihanoukvile" -> IncoTerm "CIF", IncoTerm2 "Sihanoukvile" (first word, then the rest)."""
+    value = str(header_data.get("IncoTerm") or "").strip()
+    if value:
+        term, _, term2 = value.partition(" ")
+        header_data["IncoTerm"] = term
+        header_data["IncoTerm2"] = term2.strip()
+    return header_data
+
 def process_tabular_data(tabular_data, po_key, region):
     """
     Process the tabular data to extract the relevant information.
@@ -131,6 +143,10 @@ def process_tabular_data(tabular_data, po_key, region):
     region_options = regional_options.get(region, {})
     default_uom = region_options.get("default_uom", "CS")
     tabular_data = fill_down_fields(tabular_data, region_options.get("fill_down_fields", []))
+    for i in tabular_data:
+        for date_field in region_options.get("tabular_date_fields", []):
+            if i.get(date_field):
+                i[date_field] = convert_date_format(i[date_field])
     quantity_field = "Quantity"
     transformed_tabular_data = []
     line_count=0
@@ -248,7 +264,8 @@ def apparels_form_check(sheet_name, region, header_data):
 def post_processing_transformations(header_data, tabular_data, po_key, hana_data, region):
     """Primary post processing function to drive the transformations"""
     if regional_options.get(region, {}).get("party_blocks"):
-        header_data = process_numbered_party_blocks(header_data)
+        header_data = process_numbered_party_blocks(
+            header_data, keep_line_spacing=regional_options[region].get("keep_line_spacing", False))
     else:
         header_data = process_bill_and_ship_to(header_data)
     header_data = finalize_cust_po_level(header_data, po_key)

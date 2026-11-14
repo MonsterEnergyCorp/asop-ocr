@@ -281,6 +281,21 @@ def update_metadata_for_failure(metadata):
     ocr_data = f'"erp_request_payload" = ' + f"'{json.dumps(data)}'"
     return ocr_data
 
+def extract_label_block(sheet, label, lines_max=6):
+    """Text to the right of a label, stacked down the rows (e.g. a Ship-To name and address block)."""
+    for r, row in enumerate(sheet):
+        for c, cell in enumerate(row):
+            if transform_string(cell) != label:
+                continue
+            lines = []
+            for rr in range(r, min(r + lines_max, len(sheet))):
+                value = sheet[rr][c + 1] if c + 1 < len(sheet[rr]) else None
+                if value is None or not str(value).strip():
+                    break
+                lines.append(str(value).strip())
+            return lines
+    return []
+
 def excel_parsing_flow(file_id):
     connection = connect_to_db()
     hana_data = erp_data_fetch(connection, file_id)
@@ -306,6 +321,14 @@ def excel_parsing_flow(file_id):
             header_data, tabular_data, metadata = post_processing_transformations(header_data, tabular_data, po_key, hana_data, sheet_region)
             if not tabular_data:
                 continue
+            address_block = regional_options.get(sheet_region, {}).get("address_block")
+            if address_block:
+                block_lines = extract_label_block(sheet, address_block["label"])
+                if block_lines:
+                    header_data[address_block["name_field"]] = block_lines[0]
+                    header_data[address_block["address_field"]] = " ".join(block_lines)
+            if regional_options.get(sheet_region, {}).get("split_inco_term"):
+                header_data = split_inco_term(header_data)
             region_header_fields = regional_options.get(sheet_region, {}).get("header_fields")
             if region_header_fields:
                 header_data = {**region_header_fields, **header_data}
