@@ -316,11 +316,12 @@ def excel_parsing_flow(file_id):
             logging.info(f'EXCEL EXTRACTION ISSUE: {e}')
             failed_sheets.append(sheet_name)
 
-        if not final_output:
-            metadata = add_erp_metadata_information(hana_data)
-            ocr_update_data = update_metadata_for_failure(metadata)
-        else:
-            ocr_update_data = update_processed_values(final_output)
+    # Outside the sheet loop: a workbook with no usable sheet (or no sheets) must still reach HANA and ERP as Status 52.
+    if not final_output:
+        metadata = add_erp_metadata_information(hana_data)
+        ocr_update_data = update_metadata_for_failure(metadata)
+    else:
+        ocr_update_data = update_processed_values(final_output)
 
     hana_storage_push(file_id, connection, ocr_update_data)
     close_connection(connection)
