@@ -46,8 +46,7 @@ ITEM_HEADER_MARKERS = ("CANTIDAD", "UNIDAD", "DESCRIPC", "PRECIO", "IMPORTE")
 # header field with a header_fields rule and a line item field with an items columns entry - no code change.
 OUTPUT_HEADER_FIELDS = (
     "AsopNo", "Region", "Podoctype", "CustPo", "PODate", "DlvDate", "SalesOrg", "SoldTo",
-    # ShipTo is written by the LATAM_PO_ES "Facturar a" block rule, so it stays in the response.
-    "ShipTo",
+    # "ShipTo",  # commented out for now; the LATAM_PO_ES "Facturar a" block rule no longer writes it
     # Commented out to match the v2 response. Uncomment a name to bring the field back.
     # "ShipRegion", "BillRegion", "Docnum", "SalesOrgCc", "Payer", "DocDate", "Vbeln", "TotalEach",
     # "TotalCase", "Text", "Status", "SoStatus", "SoldZip", "SoldToName", "SoldToCc", "SoldStreet",
@@ -115,9 +114,9 @@ HTML_TEMPLATES = {
              "start": "Fecha Promesa", "end": "Facturar a", "date": True},
             {"field": "SalesOrg", "rule": "between",
              "start": "Proveedor", "end": "Vendedor"},
-            # "Facturar a": first line = customer name (SoldTo), remaining lines = address (ShipTo)
+            # "Facturar a": first line = customer name (SoldTo). The address lines (ShipTo) are commented out for now.
             {"rule": "block", "start": "Facturar a", "end": "Consignar a",
-             "fields": {"SoldTo": "first", "ShipTo": "rest"}},
+             "fields": {"SoldTo": "first"}},  # "ShipTo": "rest" commented out for now
         ],
         "items": {
             "header_markers": ITEM_HEADER_MARKERS,
