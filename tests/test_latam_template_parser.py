@@ -70,7 +70,7 @@ class LatamTemplateParserTests(unittest.TestCase):
         })
 
         record = result
-        self.assertEqual(set(mappings.OUTPUT_HEADER_FIELDS) | {"NavHeadToItem", "HeadtoMeta"}, set(record))
+        self.assertEqual(set(mappings.OUTPUT_HEADER_FIELDS) | {"NavHeadToItem", "NavHeadtoMeta"}, set(record))
         self.assertEqual("HTML", record["Podoctype"])
         self.assertEqual("2026-06-30", record["PODate"])
         self.assertEqual("2026-06-30", record["DlvDate"])
@@ -82,7 +82,7 @@ class LatamTemplateParserTests(unittest.TestCase):
         self.assertEqual("2026-06-30", record["NavHeadToItem"][0]["DlvDate"])
         self.assertEqual("Bepensa Dominicana S.A.", record["NavHeadToItem"][0]["SoldTo"])
         self.assertNotIn("Amount", record["NavHeadToItem"][0])
-        self.assertEqual("2026-09-21", record["HeadtoMeta"][0]["FileDate"])
+        self.assertEqual("2026-09-21", record["NavHeadtoMeta"][0]["FileDate"])
         self.assertNotIn("Subtotal", record)
         self.assertNotIn("IVA", record)
         self.assertNotIn("Total", record)
@@ -99,7 +99,7 @@ class LatamTemplateParserTests(unittest.TestCase):
         self.assertEqual("REQ-0128109", record["Docnum"])
         self.assertEqual("PO-123", record["CustPo"])
         self.assertEqual("", record["SalesDocType"])
-        self.assertEqual(set(mappings.OUTPUT_HEADER_FIELDS) | {"NavHeadToItem", "HeadtoMeta"}, set(record))
+        self.assertEqual(set(mappings.OUTPUT_HEADER_FIELDS) | {"NavHeadToItem", "NavHeadtoMeta"}, set(record))
 
     def test_parse_latam_html_uses_asop_and_region_from_metadata(self):
         html_content = b"<html><body>Orden de compra: PO-123</body></html>"
@@ -114,7 +114,7 @@ class LatamTemplateParserTests(unittest.TestCase):
         record = result
         self.assertEqual("ASOP-123", record["AsopNo"])
         self.assertEqual("LATAM", record["Region"])
-        self.assertEqual("ASOP-123", record["HeadtoMeta"][0]["AsopNo"])
+        self.assertEqual("ASOP-123", record["NavHeadtoMeta"][0]["AsopNo"])
 
 
 if __name__ == "__main__":

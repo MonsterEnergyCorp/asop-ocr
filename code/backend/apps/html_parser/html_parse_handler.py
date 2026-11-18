@@ -301,7 +301,7 @@ def parse_html_po(content, file_data=None):
         record.setdefault(field, "")
     record["NavHeadToItem"] = extract_items(parser.tables, asop_no, template["items"])
     copy_header_to_items(record)
-    record["HeadtoMeta"] = [default_metadata(file_data, asop_no)]
+    record["NavHeadtoMeta"] = [default_metadata(file_data, asop_no)]
     return record
 
 
@@ -317,7 +317,7 @@ def failed_record(file_data):
         "AsopNo": asop_no,
         "CustPo": mappings.UNEXTRACTED_PO,
         "NavHeadToItem": [],
-        "HeadtoMeta": [default_metadata(file_data, asop_no)],
+        "NavHeadtoMeta": [default_metadata(file_data, asop_no)],
     }
 
 
@@ -338,7 +338,7 @@ def build_erp_payload(final_output):
     if final_output.get("CustPo") == mappings.UNEXTRACTED_PO or not final_output.get("NavHeadToItem"):
         return {mappings.UNEXTRACTED_PO: {
             "Status": mappings.FAILURE_STATUS,
-            "HeadtoMeta": final_output["HeadtoMeta"],
+            "NavHeadtoMeta": final_output["NavHeadtoMeta"],
         }}
     return {final_output["CustPo"]: final_output}
 
