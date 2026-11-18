@@ -46,7 +46,8 @@ ITEM_HEADER_MARKERS = ("CANTIDAD", "UNIDAD", "DESCRIPC", "PRECIO", "IMPORTE")
 # header field with a header_fields rule and a line item field with an items columns entry - no code change.
 OUTPUT_HEADER_FIELDS = (
     "AsopNo", "ShipRegion", "BillRegion", "Docnum", "SalesOrgCc", "Payer", "DocDate", "DlvDate",
-    "Vbeln", "TotalEach", "TotalCase", "Text", "Status", "SoStatus", "SoldZip", "SoldToName",
+    "Vbeln", "Text", "Status", "SoStatus", "SoldZip", "SoldToName",
+    # "TotalEach", "TotalCase",  # commented out for now (not sent to SAP); re-enable when a value is decided
     "SoldToCc", "SoldTo", "SoldStreet", "SoldRegion", "SoldCity", "ShipZip", "ShipToRegion",
     "ShipToCountry", "ShipToCc", "ShipTo", "ShipStreet", "ShippingCond", "ShipName", "Shipinst",
     "ShipCity", "ShipAddress", "SenderEmail", "SearchTerm", "SapAmount", "SalesZip", "SalesStreet",
