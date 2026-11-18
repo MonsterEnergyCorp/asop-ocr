@@ -77,7 +77,7 @@ class LatamTemplateParserTests(unittest.TestCase):
         self.assertEqual("MONSTER ENERGY DOMINICAN REPUBLIC SRL", record["SalesOrg"])
         self.assertEqual("E081003503", record["NavHeadToItem"][0]["Material"])
         self.assertEqual(set(mappings.OUTPUT_ITEM_FIELDS), set(record["NavHeadToItem"][0]))
-        self.assertEqual("", record["NavHeadToItem"][0]["UnitPrice"])
+        self.assertNotIn("UnitPrice", record["NavHeadToItem"][0])
         self.assertEqual("OCBD0125252", record["NavHeadToItem"][0]["CustPo"])
         self.assertEqual("2026-06-30", record["NavHeadToItem"][0]["DlvDate"])
         self.assertEqual("Bepensa Dominicana S.A.", record["NavHeadToItem"][0]["SoldTo"])
@@ -98,8 +98,9 @@ class LatamTemplateParserTests(unittest.TestCase):
 
         self.assertEqual("REQ-0128109", record["Docnum"])
         self.assertEqual("PO-123", record["CustPo"])
-        self.assertEqual("", record["SalesDocType"])
-        self.assertEqual(set(mappings.OUTPUT_HEADER_FIELDS) | {"NavHeadToItem", "NavHeadtoMeta"}, set(record))
+        self.assertNotIn("SalesDocType", record)
+        # a field the template fills is always in the response, even when it is not in OUTPUT_HEADER_FIELDS
+        self.assertEqual(set(mappings.OUTPUT_HEADER_FIELDS) | {"NavHeadToItem", "NavHeadtoMeta", "Docnum"}, set(record))
 
     def test_parse_latam_html_uses_asop_and_region_from_metadata(self):
         html_content = b"<html><body>Orden de compra: PO-123</body></html>"
