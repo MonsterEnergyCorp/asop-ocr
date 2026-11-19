@@ -1,4 +1,5 @@
 import json
+import re
 import openpyxl
 from datetime import datetime
 from io import BytesIO
@@ -296,6 +297,55 @@ def extract_label_block(sheet, label, lines_max=6):
             return lines
     return []
 
+def label_key(cell):
+    """Column name for matching: "PO Date\nMM/DD/YYYY" -> "podate", "Request Delivery Date MM/DD/YY" -> "requestdeliverydate"."""
+    text = re.split(r"\n|\(|\s+(?=MM/DD)", str(cell))[0]
+    return re.sub(r"[^a-z0-9#]", "", text.lower())
+
+def flat_value(value, field, options):
+    if value is None:
+        return ""
+    if field in options.get("date_fields", []):
+        return convert_date_format(value)
+    if isinstance(value, (int, float)):
+        return number_check_for_integer(value)
+    return str(value).strip()
+
+def extract_flat_table(sheet, profile, sheet_name, hana_data):
+    """One row per line item; rows with the same PO (CustPo) become one record."""
+    options = regional_options[profile]
+    columns = options["flat_columns"]
+    header_index, mapping = None, {}
+    for r, row in enumerate(sheet):
+        found = {label_key(cell): i for i, cell in enumerate(row) if cell is not None and label_key(cell) in columns}
+        if "material#" in found and "qty" in found:
+            header_index = r
+            mapping = {i: columns[key] for key, i in found.items()}
+            break
+    if header_index is None:
+        return {}
+    material_index = next(i for i, field in mapping.items() if field == "Material")
+    records = {}
+    for row in sheet[header_index + 1:]:
+        if material_index >= len(row) or row[material_index] in (None, ""):
+            continue
+        item = {field: "" for field in options["item_fields"]}
+        item["AsopNo"] = options["asop_no"]
+        for i, field in mapping.items():
+            if i < len(row):
+                item[field] = flat_value(row[i], field, options)
+        po = item.get("CustPo") or sheet_name
+        record = records.setdefault(po, {
+            "AsopNo": options["asop_no"],
+            "Region": options["region"],
+            "Podoctype": options["podoctype"],
+            "NavHeadToItem": [],
+            "NavHeadtoMeta": add_erp_metadata_information(hana_data),
+        })
+        item["OCRItemno"] = str((len(record["NavHeadToItem"]) + 1) * 10)
+        record["NavHeadToItem"].append(item)
+    return records
+
 def excel_parsing_flow(file_id):
     connection = connect_to_db()
     hana_data = erp_data_fetch(connection, file_id)
@@ -309,6 +359,9 @@ def excel_parsing_flow(file_id):
     for sheet_name, sheet in workbook_data.items():
         try:
             sheet_region = detect_template_region(sheet, region)
+            if regional_options.get(sheet_region, {}).get("flat_table"):
+                final_output.update(extract_flat_table(sheet, sheet_region, sheet_name, hana_data))
+                continue
             parsed_data = sheet_traversal(sheet, keys + regional_keys.get(sheet_region, []))
             logging.info(f' PARSED DATA: {parsed_data}')
             if not parsed_data:

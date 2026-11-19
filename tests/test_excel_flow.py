@@ -189,5 +189,78 @@ class CambodiaKitTemplateTests(unittest.TestCase):
         self.assertEqual("1003940", json.loads(stored.group(1))["4502325902"]["SoldTo"])
 
 
+class PosAsopMassOrderTests(unittest.TestCase):
+    """POS ASOP mass order: a flat table, one row per line item, the column names in the first row."""
+
+    def setUp(self):
+        _hana_pushes.clear()
+        _erp_calls.clear()
+
+    HEADER = [
+        "Order Type", "Sold to", "Ship To", "Payer", "Sales \nOrg", "Distr \nChannel", "Div", "PO/\nRef #",
+        "PO Date\nMM/DD/YYYY", "Ship to Name", "Ship To Street", "Ship To House Num2", "Ship TO Street 2",
+        "Ship to City", "Ship To State", "Ship to Zip", "Ship to Ctry", "Shipping Instructions (Text)",
+        "Request Delivery Date MM/DD/YY", "Shipping Condition (01=Truck\n02=Pickup)", "Inco Terms 1",
+        "Delivery Priority", "Line #", "Material#", "Qty", "Sales Unit of Measure", "Price (ZORP Only)",
+        "Currency  (ZORP Only)", "Plant", "SLOC (ZORP only)", "Internal Order", "Cost Center", "Item Category",
+    ]
+
+    def _workbook_bytes(self):
+        import openpyxl
+        from io import BytesIO
+        from datetime import datetime
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Sheet1"
+        ws.append(self.HEADER)
+        ws.append(["ZORP", 15162, 4023350, None, 1001, 10, 10, "R2938274", None, "Kailey Dodson",
+                   "301 Leroy Court", "H12827", "Street1", "San Luis Obispo", "CA", 93405, "US", 9513675478,
+                   datetime(2026, 2, 14), "04", "CIF", None, "n", 181016, 7, "CS", None, "USD", "1000", None,
+                   401914, None, "ZTAN"])
+        ws.append(["ZORP", 15162, 4023350, None, 1001, 10, 10, "R2938275", None, "Kailey Dodson",
+                   "301 Leroy Court", "H12828", "Street2", "San Luis Obispo 2", "CA", 93405, "US", 9513675478,
+                   datetime(2026, 2, 14), "04", None, None, 2, 107310, 7, "CS", None, "USD", "1000", None,
+                   401914, None, None])
+        buffer = BytesIO()
+        wb.save(buffer)
+        return buffer.getvalue()
+
+    def test_each_row_is_a_line_item_and_blank_fields_stay_blank(self):
+        content = self._workbook_bytes()
+        with mock.patch.object(handler, "erp_data_fetch", return_value={"file_path": "x.xlsx", "region": "EMEA", "file_name": "x.xlsx"}), \
+             mock.patch.object(handler, "read_file_from_object_store", return_value=content):
+            result = handler.excel_parsing_flow("file-4")
+
+        self.assertEqual({"R2938274", "R2938275"}, set(result))
+        record = result["R2938274"]
+        self.assertEqual({"AsopNo": "0000000000", "Region": "EMEA", "Podoctype": "EXCEL"},
+                         {k: record[k] for k in ["AsopNo", "Region", "Podoctype"]})
+        item = record["NavHeadToItem"][0]
+        self.assertEqual({
+            "OCRItemno": "10", "Material": "181016", "Quantity": "7", "Uom": "CS", "Plant": "1000",
+            "ItmCat": "ZTAN", "IncoTerm": "CIF", "ShippingCond": "04", "CustPo": "R2938274",
+            "ShipTo": "4023350", "SalesDocType": "ZORP", "SalesOrg": "1001", "SoldTo": "15162",
+            "DlvDate": "2026-02-14", "PODate": "", "Payer": "", "CostCenter": "", "UnitPrice": "",
+            "Currency": "USD", "ShipCity": "San Luis Obispo", "ShipZip": "93405", "ShipInst": "9513675478",
+        }, {k: item[k] for k in ["OCRItemno", "Material", "Quantity", "Uom", "Plant", "ItmCat", "IncoTerm",
+                                 "ShippingCond", "CustPo", "ShipTo", "SalesDocType", "SalesOrg", "SoldTo",
+                                 "DlvDate", "PODate", "Payer", "CostCenter", "UnitPrice", "Currency",
+                                 "ShipCity", "ShipZip", "ShipInst"]})
+        self.assertEqual(
+            ["AsopNo", "OCRItemno", "Material", "MaterialCC", "MatDesc", "Quantity", "QuantityCC", "Uom",
+             "UnitPrice", "ExtPrice", "DlvDate", "Plant", "ItmCat", "IncoTerm", "ShippingCond", "AddField1",
+             "AddField2", "AddField3", "AddField4", "AddField5", "Size", "Pallet", "CustPo", "ShipTo",
+             "SapPriceInd", "SalesDocType", "SalesOrg", "SoldTo", "PODate", "TemplateInd", "POSTotalCost",
+             "MatTextInd", "ShipCity", "Payer", "DistChannel", "Division", "ShipName", "ShipStreet", "ShipHouse",
+             "ShipStreet2", "ShipState", "ShipZip", "ShipCountry", "ShipInst", "Currency", "InternalOrder",
+             "CostCenter", "POItemNo"],
+            list(item.keys()))
+        second = result["R2938275"]["NavHeadToItem"][0]
+        self.assertEqual("", second["IncoTerm"])
+        self.assertEqual("107310", second["Material"])
+        self.assertEqual(["file-4"], _erp_calls)
+
+
 if __name__ == "__main__":
     unittest.main()

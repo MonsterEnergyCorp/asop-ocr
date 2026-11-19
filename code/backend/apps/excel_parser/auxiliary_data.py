@@ -489,3 +489,65 @@ regional_options[CAMBODIA_KIT] = {
         "address_field": "ShipAddress",
     },
 }
+
+# ---------------------------------------------------------------------------
+# POS ASOP mass order - flat table: one row per line item, column names in the header row.
+# Recognised by its own column names, so other sheets are processed exactly as before.
+# The output field list and the column names are configuration, not code.
+# ---------------------------------------------------------------------------
+POS_ASOP = "POS_ASOP_MASS_ORDER"
+
+template_region_markers[POS_ASOP] = [
+    ["ShiptoName", "ShipToStreet", "Material#", "SalesUnitofMeasure"],
+]
+
+regional_options[POS_ASOP] = {
+    "flat_table": True,
+    "region": "EMEA",
+    "podoctype": "EXCEL",
+    "asop_no": "0000000000",
+    "date_fields": ["PODate", "DlvDate"],
+    # column name (see label_key in the handler) -> ERP field
+    "flat_columns": {
+        "ordertype": "SalesDocType",
+        "soldto": "SoldTo",
+        "shipto": "ShipTo",
+        "payer": "Payer",
+        "sales": "SalesOrg",
+        "distr": "DistChannel",
+        "div": "Division",
+        "po": "CustPo",
+        "podate": "PODate",
+        "shiptoname": "ShipName",
+        "shiptostreet": "ShipStreet",
+        "shiptohousenum2": "ShipHouse",
+        "shiptostreet2": "ShipStreet2",
+        "shiptocity": "ShipCity",
+        "shiptostate": "ShipState",
+        "shiptozip": "ShipZip",
+        "shiptoctry": "ShipCountry",
+        "shippinginstructions": "ShipInst",
+        "requestdeliverydate": "DlvDate",
+        "shippingcondition": "ShippingCond",
+        "incoterms1": "IncoTerm",
+        "material#": "Material",
+        "qty": "Quantity",
+        "salesunitofmeasure": "Uom",
+        "price": "UnitPrice",
+        "currency": "Currency",
+        "plant": "Plant",
+        "internalorder": "InternalOrder",
+        "costcenter": "CostCenter",
+        "itemcategory": "ItmCat",
+    },
+    # every field of a line item, in the order of the response; a field not in the file stays ""
+    "item_fields": [
+        "AsopNo", "OCRItemno", "Material", "MaterialCC", "MatDesc", "Quantity", "QuantityCC", "Uom",
+        "UnitPrice", "ExtPrice", "DlvDate", "Plant", "ItmCat", "IncoTerm", "ShippingCond",
+        "AddField1", "AddField2", "AddField3", "AddField4", "AddField5", "Size", "Pallet", "CustPo",
+        "ShipTo", "SapPriceInd", "SalesDocType", "SalesOrg", "SoldTo", "PODate", "TemplateInd",
+        "POSTotalCost", "MatTextInd", "ShipCity", "Payer", "DistChannel", "Division", "ShipName",
+        "ShipStreet", "ShipHouse", "ShipStreet2", "ShipState", "ShipZip", "ShipCountry", "ShipInst",
+        "Currency", "InternalOrder", "CostCenter", "POItemNo",
+    ],
+}
