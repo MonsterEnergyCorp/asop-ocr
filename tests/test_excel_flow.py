@@ -262,5 +262,33 @@ class PosAsopMassOrderTests(unittest.TestCase):
         self.assertEqual(["file-4"], _erp_calls)
 
 
+class PodoctypeFromFileTests(unittest.TestCase):
+    """A Podoctype label in the file is used; without one the default EXCEL is kept."""
+
+    def _with_label(self, value):
+        import openpyxl
+        from io import BytesIO
+        wb = openpyxl.load_workbook(BytesIO(ChileAndinaTemplateTests._workbook_bytes(self)))
+        ws = wb.active
+        if value is not None:
+            ws["L1"], ws["M1"] = "Podoctype", value
+        buffer = BytesIO()
+        wb.save(buffer)
+        return buffer.getvalue()
+
+    def _run(self, content):
+        with mock.patch.object(handler, "erp_data_fetch", return_value={"file_path": "x.xlsx", "region": "LATAM", "file_name": "x.xlsx"}), \
+             mock.patch.object(handler, "read_file_from_object_store", return_value=content):
+            return handler.excel_parsing_flow("file-5")
+
+    def test_podoctype_label_in_the_file_is_used(self):
+        result = self._run(self._with_label("CUSTOMFORM"))
+        self.assertEqual("CUSTOMFORM", result["4100185159"]["Podoctype"])
+
+    def test_without_the_label_the_default_is_used(self):
+        result = self._run(self._with_label(None))
+        self.assertEqual("EXCEL", result["4100185159"]["Podoctype"])
+
+
 if __name__ == "__main__":
     unittest.main()

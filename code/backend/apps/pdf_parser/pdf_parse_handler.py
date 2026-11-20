@@ -338,6 +338,10 @@ def extraction_cleanups(key,value):
     return value
 
 
+# Podoctype of every PDF payload; the extraction can set its own value, otherwise this default is used
+PDF_PODOCTYPE = "PDF"
+
+
 def metadata_formatter(file_data, payload):
     """
     Function to format the metadata for the parsed data
@@ -359,6 +363,7 @@ def metadata_formatter(file_data, payload):
     metadata['Field4'] = ''
     metadata['Field5'] = ''
     payload['NavHeadtoMeta'] = [metadata]
+    payload.setdefault('Podoctype', PDF_PODOCTYPE)
     return payload
 
 

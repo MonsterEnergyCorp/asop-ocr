@@ -218,6 +218,7 @@ def parse_csv_po(content, file_data=None):
 
     return {
         "AsopNo": asop_no,
+        "Podoctype": template.get("podoctype", mappings.PODOCTYPE),
         "AddField1": template.get("add_field1", mappings.ADD_FIELD1),
         "NavHeadToItem": build_line_items(rows, asop_no),
         "NavHeadtoMeta": [default_metadata(file_data, template, asop_no)],

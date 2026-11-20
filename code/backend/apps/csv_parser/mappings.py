@@ -30,6 +30,7 @@ ASOP_NO = "0000000000"
 OCR_ITEM_NO_START = 10
 ADD_FIELD1 = "MASSCREATION"
 DEFAULT_MIME_TYPE = "text/csv"
+PODOCTYPE = "CSV"
 
 # Candidate delimiters; the one that splits the header row into the most columns is used.
 CSV_DELIMITERS = ";,\t|"

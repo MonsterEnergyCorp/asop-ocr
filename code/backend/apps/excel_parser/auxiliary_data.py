@@ -35,7 +35,8 @@ data_dimensions={
     "SoldToName": "singular",
     "ShippingCond": "singular",
     "ItemCat": "singular",
-    "Currency": "singular"
+    "Currency": "singular",
+    "Podoctype": "singular"
 }
 
 data_mapping = {
@@ -124,7 +125,9 @@ data_mapping = {
 
     "OrderType": "SalesDocType",  #US ZEM
     "SalesOrg": "SalesOrg",
-    "OrderDate": "PODate"
+    "OrderDate": "PODate",
+    "Podoctype": "Podoctype",  # a Podoctype label in the file overrides the default
+    "Podoctype:": "Podoctype"
 }
 
 keys = ['DELIVERYCONTACT-EMAIL*',
@@ -273,7 +276,9 @@ keys = ['DELIVERYCONTACT-EMAIL*',
  'LoopID',
  'Amount/Price',
 
- 'OrderDate' #ZEM
+ 'OrderDate', #ZEM
+ 'Podoctype',
+ 'Podoctype:'
  ]
 
 multi_valued = {
@@ -551,3 +556,6 @@ regional_options[POS_ASOP] = {
         "Currency", "InternalOrder", "CostCenter", "POItemNo",
     ],
 }
+
+# Podoctype for every Excel form that does not set its own (a profile can set its own value in its header_fields).
+DEFAULT_PODOCTYPE = "EXCEL"

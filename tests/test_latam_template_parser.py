@@ -30,7 +30,7 @@ class LatamTemplateParserTests(unittest.TestCase):
             "sender_email": "sender@example.com"
         })
 
-        self.assertEqual({"AsopNo", "AddField1", "NavHeadToItem", "NavHeadtoMeta"}, set(result))
+        self.assertEqual({"AsopNo", "Podoctype", "AddField1", "NavHeadToItem", "NavHeadtoMeta"}, set(result))
         self.assertEqual({
             "AsopNo", "CsvNO", "OCRItemno", "MatDesc", "Quantity", "Material",
             "Uom", "DlvDate", "CustPo", "SoldTo", "ShipCity", "ShipTo"

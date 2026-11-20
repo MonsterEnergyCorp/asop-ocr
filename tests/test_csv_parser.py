@@ -26,7 +26,7 @@ class CsvParserTests(unittest.TestCase):
     def test_loginsa_sample_uses_latam_template(self):
         result = parse_csv_po(LOGINSA_FILE.read_bytes(), {**FILE_DATA, "file_name": LOGINSA_FILE.name})
 
-        self.assertEqual({"AsopNo", "AddField1", "NavHeadToItem", "NavHeadtoMeta"}, set(result))
+        self.assertEqual({"AsopNo", "Podoctype", "AddField1", "NavHeadToItem", "NavHeadtoMeta"}, set(result))
         self.assertEqual("0000000000", result["AsopNo"])
         self.assertEqual("MASSCREATION", result["AddField1"])
         items = result["NavHeadToItem"]

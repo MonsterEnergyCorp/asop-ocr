@@ -387,6 +387,7 @@ def excel_parsing_flow(file_id):
                 header_data = {**region_header_fields, **header_data}
             sheet_po_numbers = extract_po_numbers(header_data, tabular_data, sheet_name)
             header_data = apparels_form_check(sheet_name, sheet_region, header_data)  #ZEM
+            header_data = {"Podoctype": DEFAULT_PODOCTYPE, **header_data}
             final_output[sheet_po_numbers] = {**header_data, "NavHeadToItem": tabular_data, "NavHeadtoMeta": metadata}
         except Exception as e:
             logging.info(f'EXCEL EXTRACTION ISSUE: {e}')
