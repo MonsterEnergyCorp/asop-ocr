@@ -1,0 +1,12 @@
+openssl_conf = oc
+
+[oc]
+ssl_conf = sc
+
+[sc]
+system_default = sd
+
+[sd]
+# Skip the post-quantum (ML-KEM) hybrid key share that OpenSSL 3.5 sends by default.
+# Some network paths stall the larger TLS handshake, which breaks pip inside the build.
+Groups = X25519:P-256
