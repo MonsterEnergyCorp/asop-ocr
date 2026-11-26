@@ -511,6 +511,7 @@ regional_options[POS_ASOP] = {
     "region": "EMEA",
     "podoctype": "EXCEL",
     "asop_no": "0000000000",
+    "record_fields": {"AddField1": "MASSPOSALL"},      # template indicator, set on the header
     "date_fields": ["PODate", "DlvDate"],
     # column name (see label_key in the handler) -> ERP field
     "flat_columns": {

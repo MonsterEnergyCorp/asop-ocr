@@ -234,8 +234,8 @@ class PosAsopMassOrderTests(unittest.TestCase):
 
         self.assertEqual({"R2938274", "R2938275"}, set(result))
         record = result["R2938274"]
-        self.assertEqual({"AsopNo": "0000000000", "Region": "EMEA", "Podoctype": "EXCEL"},
-                         {k: record[k] for k in ["AsopNo", "Region", "Podoctype"]})
+        self.assertEqual({"AsopNo": "0000000000", "Region": "EMEA", "AddField1": "MASSPOSALL", "Podoctype": "EXCEL"},
+                         {k: record[k] for k in ["AsopNo", "Region", "AddField1", "Podoctype"]})
         item = record["NavHeadToItem"][0]
         self.assertEqual({
             "OCRItemno": "10", "Material": "181016", "Quantity": "7", "Uom": "CS", "Plant": "1000",
