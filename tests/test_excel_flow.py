@@ -334,6 +334,8 @@ class PosAsopMassOrderBrazilTests(unittest.TestCase):
                                  "DistChannel", "Division", "InternalOrder", "CFOPCode", "TaxLawICMS",
                                  "TaxLawIPI", "COFINSTaxLaw", "PISTaxLaw", "AssetNumber", "SerialNumber",
                                  "SDTaxCode", "CostCenter", "ISSTaxLaw", "POItemNo"]})
+        second = result["R2938275"]["NavHeadToItem"][0]
+        self.assertEqual(("ZBAS", "CIF"), (second["ItmCat"], second["IncoTerm"]))  # blank in the file: template defaults
         self.assertEqual(["file-brazil"], _erp_calls)
 
     def test_delivery_date_serial_is_converted_and_unit_price_only_for_zorp(self):

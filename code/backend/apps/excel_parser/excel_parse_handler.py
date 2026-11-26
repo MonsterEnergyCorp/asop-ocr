@@ -337,6 +337,9 @@ def extract_flat_table(sheet, profile, sheet_name, hana_data):
         for i, field in mapping.items():
             if i < len(row):
                 item[field] = flat_value(row[i], field, options)
+        for field, default in options.get("item_defaults", {}).items():
+            if not item.get(field):
+                item[field] = default  # blank in the file: use the template's standard value
         if "price_order_types" in options and item.get("SalesDocType") not in options["price_order_types"]:
             item["UnitPrice"] = ""  # price is only sent for the listed order types (ZORP only)
         po = item.get("CustPo") or sheet_name

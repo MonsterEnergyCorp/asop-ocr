@@ -576,6 +576,7 @@ regional_options[POS_ASOP_BRAZIL] = {
     "date_fields": ["PODate", "DlvDate"],
     "excel_serial_dates": True,                        # Request Delivery Date is stored as an Excel serial number
     "price_order_types": ["ZORP"],                     # UnitPrice is only sent for ZORP orders
+    "item_defaults": {"ItmCat": "ZBAS", "IncoTerm": "CIF"},  # used when the file leaves these blank
     # column name (see label_key in the handler) -> ERP field
     "flat_columns": {
         "ordertype": "SalesDocType",
