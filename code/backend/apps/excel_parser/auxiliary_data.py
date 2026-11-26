@@ -557,5 +557,66 @@ regional_options[POS_ASOP] = {
     ],
 }
 
+# ---------------------------------------------------------------------------
+# POS ASOP mass order - Brazil flat table. Recognised by its own labels (labels are matched with spaces and
+# line breaks removed). Its header carries the template indicator AddField1 = MASSPOSBRAZIL.
+# ---------------------------------------------------------------------------
+POS_ASOP_BRAZIL = "POS_ASOP_MASS_ORDER_BRAZIL"
+
+template_region_markers[POS_ASOP_BRAZIL] = [
+    ["GVS_TC_DATA-REC-PARVW(01)", "Taxlaw:ICMS(*)"],
+]
+
+regional_options[POS_ASOP_BRAZIL] = {
+    "flat_table": True,
+    "region": "EMEA",
+    "podoctype": "EXCEL",
+    "asop_no": "0000000000",
+    "record_fields": {"AddField1": "MASSPOSBRAZIL"},   # template indicator, set on the header, not on items
+    "date_fields": ["PODate", "DlvDate"],
+    "excel_serial_dates": True,                        # Request Delivery Date is stored as an Excel serial number
+    "price_order_types": ["ZORP"],                     # UnitPrice is only sent for ZORP orders
+    # column name (see label_key in the handler) -> ERP field
+    "flat_columns": {
+        "ordertype": "SalesDocType",
+        "soldto": "SoldTo",
+        "shipto": "ShipTo",
+        "sales": "SalesOrg",
+        "distr": "DistChannel",
+        "div": "Division",
+        "po": "CustPo",
+        "podate": "PODate",
+        "requestdeliverydate": "DlvDate",
+        "shippingcondition": "ShippingCond",
+        "incoterms1": "IncoTerm",
+        "material#": "Material",
+        "qty": "Quantity",
+        "salesunitofmeasure": "Uom",
+        "price": "UnitPrice",
+        "plant": "Plant",
+        "internalorder": "InternalOrder",
+        "costcenter": "CostCenter",
+        "itemcategory": "ItmCat",
+        "sdtaxcode": "SDTaxCode",
+        "cfopcodeandextension": "CFOPCode",
+        "taxlawicms": "TaxLawICMS",
+        "taxlawipi": "TaxLawIPI",
+        "isstaxlaw": "ISSTaxLaw",
+        "cofinstaxlaw": "COFINSTaxLaw",
+        "pistaxlaw": "PISTaxLaw",
+        "mainassetnumber": "AssetNumber",
+        "serialnumberx000d": "SerialNumber",
+    },
+    # every field of a line item, in the order of the response; a field not in the file stays ""
+    "item_fields": [
+        "AsopNo", "OCRItemno", "Material", "MaterialCC", "MatDesc", "Quantity", "QuantityCC", "Uom",
+        "UnitPrice", "ExtPrice", "DlvDate", "Plant", "ItmCat", "IncoTerm", "ShippingCond",
+        "AddField1", "AddField2", "AddField3", "AddField4", "AddField5", "Size", "Pallet", "CustPo",
+        "ShipTo", "SapPriceInd", "SalesDocType", "SalesOrg", "SoldTo", "PODate", "DistChannel", "Division",
+        "InternalOrder", "CostCenter", "CFOPCode", "TaxLawICMS", "TaxLawIPI", "ISSTaxLaw", "COFINSTaxLaw",
+        "PISTaxLaw", "AssetNumber", "SerialNumber", "SDTaxCode", "POItemNo",
+    ],
+}
+
 # Podoctype for every Excel form that does not set its own (a profile can set its own value in its header_fields).
 DEFAULT_PODOCTYPE = "EXCEL"

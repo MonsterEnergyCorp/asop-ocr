@@ -1,6 +1,7 @@
 import json
 import re
 import openpyxl
+from openpyxl.utils.datetime import from_excel
 from datetime import datetime
 from io import BytesIO
 from apps.excel_parser.auxiliary_data import *
@@ -306,6 +307,8 @@ def flat_value(value, field, options):
     if value is None:
         return ""
     if field in options.get("date_fields", []):
+        if options.get("excel_serial_dates") and isinstance(value, (int, float)):
+            return from_excel(value).strftime('%Y-%m-%d')  # date stored as an Excel serial number
         return convert_date_format(value)
     if isinstance(value, (int, float)):
         return number_check_for_integer(value)
@@ -334,10 +337,13 @@ def extract_flat_table(sheet, profile, sheet_name, hana_data):
         for i, field in mapping.items():
             if i < len(row):
                 item[field] = flat_value(row[i], field, options)
+        if "price_order_types" in options and item.get("SalesDocType") not in options["price_order_types"]:
+            item["UnitPrice"] = ""  # price is only sent for the listed order types (ZORP only)
         po = item.get("CustPo") or sheet_name
         record = records.setdefault(po, {
             "AsopNo": options["asop_no"],
             "Region": options["region"],
+            **options.get("record_fields", {}),  # constant header fields of this template, e.g. the template indicator
             "Podoctype": options["podoctype"],
             "NavHeadToItem": [],
             "NavHeadtoMeta": add_erp_metadata_information(hana_data),

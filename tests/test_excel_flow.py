@@ -262,6 +262,89 @@ class PosAsopMassOrderTests(unittest.TestCase):
         self.assertEqual(["file-4"], _erp_calls)
 
 
+class PosAsopMassOrderBrazilTests(unittest.TestCase):
+    """POS ASOP mass order, Brazil layout: template indicator AddField1 = MASSPOSBRAZIL on the header,
+    UnitPrice only for ZORP orders, delivery date stored as an Excel serial number."""
+
+    def setUp(self):
+        _hana_pushes.clear()
+        _erp_calls.clear()
+
+    HEADER = [
+        "Order Type (*)", "Sold to (*)", "Ship To (*)", "Sales \nOrg (*)", "Distr \nChannel (*)", "Div (*)",
+        "PO/\nRef # (*)", "PO Date\nMM/DD/YYYY (*)", "Request Delivery Date MM/DD/YY (*)",
+        "Shipping Condition (01=Truck\n02=Pickup\n03=Int'l\n04=UPS)", "Currency  (ZORP Only)", "Inco Terms 1 (*)",
+        "Delivery Priority", "GVS_TC_DATA-REC-PARVW(01)", "GVS_TC_DATA-REC-PARTNER(01)", "Line # (*)", "Material# (*)",
+        "Qty (*)", "Sales Unit of Measure", "Price (ZORP Only)", "Plant (*)", "SLOC (*)", "Internal Order (*)",
+        "Cost Center", "Item Category (*)", "SD tax code (*)", "CFOP Code and Extension\n (*)", "Tax law: ICMS (*)",
+        "Tax law: IPI\n (*)", "ISS Tax Law", "COFINS Tax Law\n (*)", "PIS Tax Law\n (*)", "Main Asset Number",
+        "Serial number_x000D_\nVBAP-ZZSERNR",
+    ]
+
+    def _workbook_bytes(self, order_type="ZBAS", price=None):
+        import openpyxl
+        from io import BytesIO
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Sheet1"
+        ws.append(self.HEADER)
+        ws.append([order_type, 15162, 4023350, 3000, 10, 10, "R2938274", None, 45702, "04", "USD", "CIF", None,
+                   "SP", "38829", 1, 181016, 7, "CS", price, "1000", None, 401914, None, "ZBAS", "I3", "6908/AA",
+                   "M41", "MP9", None, "C49", "P49", 85046178, "O84250860445"])
+        ws.append([order_type, 15162, 4023350, 3000, 10, 10, "R2938275", None, 45702, "04", "USD", None, None,
+                   None, None, 2, 107310, 7, "CS", None, "1000", None, 401914, None, None, "I3", "6908/AA",
+                   "M41", "MP9", None, "C49", "P49", 85046179, "O84250860497"])
+        buffer = BytesIO()
+        wb.save(buffer)
+        return buffer.getvalue()
+
+    def _parse(self, content):
+        with mock.patch.object(handler, "erp_data_fetch", return_value={"file_path": "x.xlsx", "region": "EMEA", "file_name": "x.xlsx"}), \
+             mock.patch.object(handler, "read_file_from_object_store", return_value=content):
+            return handler.excel_parsing_flow("file-brazil")
+
+    def test_header_carries_the_template_indicator_and_items_follow_the_sample(self):
+        result = self._parse(self._workbook_bytes())
+        self.assertEqual({"R2938274", "R2938275"}, set(result))
+        record = result["R2938274"]
+        self.assertEqual(
+            ["AsopNo", "Region", "AddField1", "Podoctype", "NavHeadToItem", "NavHeadtoMeta"], list(record.keys()))
+        self.assertEqual({"AsopNo": "0000000000", "Region": "EMEA", "AddField1": "MASSPOSBRAZIL", "Podoctype": "EXCEL"},
+                         {k: record[k] for k in ["AsopNo", "Region", "AddField1", "Podoctype"]})
+        item = record["NavHeadToItem"][0]
+        self.assertEqual("", item["AddField1"])  # the indicator is on the header only
+        self.assertEqual([
+            "AsopNo", "OCRItemno", "Material", "MaterialCC", "MatDesc", "Quantity", "QuantityCC", "Uom",
+            "UnitPrice", "ExtPrice", "DlvDate", "Plant", "ItmCat", "IncoTerm", "ShippingCond", "AddField1",
+            "AddField2", "AddField3", "AddField4", "AddField5", "Size", "Pallet", "CustPo", "ShipTo",
+            "SapPriceInd", "SalesDocType", "SalesOrg", "SoldTo", "PODate", "DistChannel", "Division",
+            "InternalOrder", "CostCenter", "CFOPCode", "TaxLawICMS", "TaxLawIPI", "ISSTaxLaw", "COFINSTaxLaw",
+            "PISTaxLaw", "AssetNumber", "SerialNumber", "SDTaxCode", "POItemNo",
+        ], list(item.keys()))
+        self.assertEqual({
+            "OCRItemno": "10", "Material": "181016", "Quantity": "7", "Uom": "CS", "Plant": "1000",
+            "ItmCat": "ZBAS", "IncoTerm": "CIF", "ShippingCond": "04", "CustPo": "R2938274", "ShipTo": "4023350",
+            "SalesDocType": "ZBAS", "SalesOrg": "3000", "SoldTo": "15162", "DistChannel": "10", "Division": "10",
+            "InternalOrder": "401914", "CFOPCode": "6908/AA", "TaxLawICMS": "M41", "TaxLawIPI": "MP9",
+            "COFINSTaxLaw": "C49", "PISTaxLaw": "P49", "AssetNumber": "85046178", "SerialNumber": "O84250860445",
+            "SDTaxCode": "I3", "CostCenter": "", "ISSTaxLaw": "", "POItemNo": "",
+        }, {k: item[k] for k in ["OCRItemno", "Material", "Quantity", "Uom", "Plant", "ItmCat", "IncoTerm",
+                                 "ShippingCond", "CustPo", "ShipTo", "SalesDocType", "SalesOrg", "SoldTo",
+                                 "DistChannel", "Division", "InternalOrder", "CFOPCode", "TaxLawICMS",
+                                 "TaxLawIPI", "COFINSTaxLaw", "PISTaxLaw", "AssetNumber", "SerialNumber",
+                                 "SDTaxCode", "CostCenter", "ISSTaxLaw", "POItemNo"]})
+        self.assertEqual(["file-brazil"], _erp_calls)
+
+    def test_delivery_date_serial_is_converted_and_unit_price_only_for_zorp(self):
+        result = self._parse(self._workbook_bytes(order_type="ZBAS", price=120.5))
+        self.assertEqual("2025-02-14", result["R2938274"]["NavHeadToItem"][0]["DlvDate"])
+        self.assertEqual("", result["R2938274"]["NavHeadToItem"][0]["UnitPrice"])
+
+        result = self._parse(self._workbook_bytes(order_type="ZORP", price=120.5))
+        self.assertEqual("120.5", result["R2938274"]["NavHeadToItem"][0]["UnitPrice"])
+
+
 class PodoctypeFromFileTests(unittest.TestCase):
     """A Podoctype label in the file is used; without one the default EXCEL is kept."""
 
