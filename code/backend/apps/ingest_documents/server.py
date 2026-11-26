@@ -1,7 +1,7 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware import Middleware
-from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 from apps.ingest_documents.ocr_ingest_doc import upload_invoice_file
 from typing import List
 import logging
@@ -10,17 +10,25 @@ from core.constants import SUPPORTED_FILE_TYPES
 
 env = config.env
 
+def ingest_response(result: dict) -> JSONResponse:
+    """Same {message, data} shape for success and failure. The HTTP status is the real result, so the caller sees failures as errors."""
+    status_code = result.get('status_code', 200)
+    if status_code >= 400:
+        return JSONResponse(status_code=status_code, content={"message": "File ingestion failed", "data": result})
+    return JSONResponse(status_code=200, content={"message": "File ingested successfully", "data": result})
+
 def init_routers(app_: FastAPI) -> None:
     @app_.post(f"/{env}/ocr/ingest")
     # plain def (not async): the upload does blocking Blob/HANA/parser calls, so FastAPI runs it in a
     # worker thread and the health check keeps answering while uploads run
     def upload_pdf(data: dict):
         if data.get('data',{}).get('file_type') not in SUPPORTED_FILE_TYPES:
-            raise HTTPException(status_code=400, detail="Invalid file type.")
+            return ingest_response({"status_code": 400, "message": "Invalid file type."})
         logging.info(f"Ingest request received: file_type={data.get('data', {}).get('file_type')}, file_id={data.get('file_id')}")
         result = upload_invoice_file(data)
-        logging.info(f"Ingest request answered: status_code={result.get('status_code')}, file_id={data.get('file_id')}")
-        return {"message": "File ingested successfully", "data": result}
+        status_code = result.get('status_code', 200)
+        logging.info(f"Ingest request answered: status_code={status_code}, file_id={data.get('file_id')}")
+        return ingest_response(result)
 
     if config.ingest_public_path and config.ingest_public_path != f"/{env}/ocr/ingest":
         app_.add_api_route(config.ingest_public_path, upload_pdf, methods=["POST"])

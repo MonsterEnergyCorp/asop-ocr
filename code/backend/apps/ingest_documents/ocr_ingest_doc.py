@@ -1,4 +1,4 @@
-import json, pikepdf, requests, os, tempfile, uuid, logging, base64, threading
+import json, pikepdf, requests, os, tempfile, uuid, logging, base64, threading, re
 from datetime import datetime
 from fastapi import UploadFile, HTTPException
 from core.azure_storage.blob_storage_connection import *
@@ -167,7 +167,9 @@ def process_upload(data: dict):
             return {"status_code": 200, "message" : response}
     except Exception as e:
         logging.exception(f"Ingest failed: {e}")
-        response = {"status_code": 500, "message" : f'Error Processing request - {e}'}
+        # Return the real error type and message so the caller can see the exact cause; the SAS signature is masked
+        detail = re.sub(r'sig=[^&\s\'"]+', 'sig=REDACTED', str(e))
+        response = {"status_code": 500, "message" : f'Error Processing request - {type(e).__name__}: {detail}'}
 
     return response
 

@@ -1,5 +1,6 @@
 import sys
 import asyncio
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -76,10 +77,10 @@ class IngestParserRequestTests(unittest.TestCase):
         with patch.object(ingest_server, "upload_invoice_file", return_value={"status_code": 200}) as upload:
             result = endpoint(payload)
             upload.assert_called_once_with(payload)
-            self.assertEqual(200, result["data"]["status_code"])
-            with self.assertRaises(ingest_server.HTTPException) as raised:
-                endpoint({"data": {"file_type": "invalid"}})
-            self.assertEqual(400, raised.exception.status_code)
+            self.assertEqual(200, result.status_code)
+            self.assertEqual(200, json.loads(result.body)["data"]["status_code"])
+            rejected = endpoint({"data": {"file_type": "invalid"}})
+            self.assertEqual(400, rejected.status_code)
             upload.assert_called_once()
 
     def test_no_extra_route_when_public_path_is_unset_or_matches_internal_path(self):
