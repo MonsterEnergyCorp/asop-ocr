@@ -77,7 +77,7 @@ class LatamTemplateParserTests(unittest.TestCase):
         self.assertEqual("MONSTER ENERGY DOMINICAN REPUBLIC SRL", record["SalesOrg"])
         self.assertEqual("E081003503", record["NavHeadToItem"][0]["Material"])
         self.assertEqual(set(mappings.OUTPUT_ITEM_FIELDS), set(record["NavHeadToItem"][0]))
-        self.assertNotIn("UnitPrice", record["NavHeadToItem"][0])
+        self.assertEqual("", record["NavHeadToItem"][0]["UnitPrice"])
         self.assertEqual("OCBD0125252", record["NavHeadToItem"][0]["CustPo"])
         self.assertEqual("2026-06-30", record["NavHeadToItem"][0]["DlvDate"])
         self.assertEqual("Bepensa Dominicana S.A.", record["NavHeadToItem"][0]["SoldTo"])
@@ -98,7 +98,7 @@ class LatamTemplateParserTests(unittest.TestCase):
 
         self.assertEqual("REQ-0128109", record["Docnum"])
         self.assertEqual("PO-123", record["CustPo"])
-        self.assertNotIn("SalesDocType", record)
+        self.assertEqual("", record["SalesDocType"])
         # a field the template fills is always in the response, even when it is not in OUTPUT_HEADER_FIELDS
         self.assertEqual(set(mappings.OUTPUT_HEADER_FIELDS) | {"NavHeadToItem", "NavHeadtoMeta", "Docnum"}, set(record))
 
