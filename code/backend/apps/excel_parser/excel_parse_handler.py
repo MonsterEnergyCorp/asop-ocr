@@ -343,8 +343,6 @@ def extract_flat_table(sheet, profile, sheet_name, hana_data):
         if "price_order_types" in options and item.get("SalesDocType") not in options["price_order_types"]:
             item["UnitPrice"] = ""  # price is only sent for the listed order types (ZORP only)
         po = item.get("CustPo") or sheet_name
-        if options.get("one_record_per_sheet") and records:
-            po = next(iter(records))  # every row of the sheet is a line item of the same record
         record = records.setdefault(po, {
             "AsopNo": options["asop_no"],
             "Region": options["region"],
