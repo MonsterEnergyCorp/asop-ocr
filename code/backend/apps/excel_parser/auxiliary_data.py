@@ -598,6 +598,7 @@ regional_options[POS_ASOP_BRAZIL] = {
         "salesunitofmeasure": "Uom",
         "price": "UnitPrice",
         "plant": "Plant",
+        "sloc": "Storageloc",
         "internalorder": "InternalOrder",
         "costcenter": "CostCenter",
         "itemcategory": "ItmCat",
@@ -614,7 +615,7 @@ regional_options[POS_ASOP_BRAZIL] = {
     # every field of a line item, in the order of the response; a field not in the file stays ""
     "item_fields": [
         "AsopNo", "OCRItemno", "Material", "MaterialCC", "MatDesc", "Quantity", "QuantityCC", "Uom",
-        "UnitPrice", "ExtPrice", "DlvDate", "Plant", "ItmCat", "IncoTerm", "ShippingCond",
+        "UnitPrice", "ExtPrice", "DlvDate", "Plant", "Storageloc", "ItmCat", "IncoTerm", "ShippingCond",
         "AddField1", "AddField2", "AddField3", "AddField4", "AddField5", "Size", "Pallet", "CustPo",
         "ShipTo", "SapPriceInd", "SalesDocType", "SalesOrg", "SoldTo", "PODate", "DistChannel", "Division",
         "InternalOrder", "CostCenter", "CFOPCode", "TaxLawICMS", "TaxLawIPI", "ISSTaxLaw", "COFINSTaxLaw",

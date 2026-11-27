@@ -291,7 +291,7 @@ class PosAsopMassOrderBrazilTests(unittest.TestCase):
         ws.title = "Sheet1"
         ws.append(self.HEADER)
         ws.append([order_type, 15162, 4023350, 3000, 10, 10, "R2938274", None, 45702, "04", "USD", "CIF", None,
-                   "SP", "38829", 1, 181016, 7, "CS", price, "1000", None, 401914, None, "ZBAS", "I3", "6908/AA",
+                   "SP", "38829", 1, 181016, 7, "CS", price, "1000", "1000", 401914, None, "ZBAS", "I3", "6908/AA",
                    "M41", "MP9", None, "C49", "P49", 85046178, "O84250860445"])
         ws.append([order_type, 15162, 4023350, 3000, 10, 10, "R2938275", None, 45702, "04", "USD", None, None,
                    None, None, 2, 107310, 7, "CS", None, "1000", None, 401914, None, None, "I3", "6908/AA",
@@ -318,20 +318,20 @@ class PosAsopMassOrderBrazilTests(unittest.TestCase):
         self.assertEqual("", item["AddField1"])  # the indicator is on the header only
         self.assertEqual([
             "AsopNo", "OCRItemno", "Material", "MaterialCC", "MatDesc", "Quantity", "QuantityCC", "Uom",
-            "UnitPrice", "ExtPrice", "DlvDate", "Plant", "ItmCat", "IncoTerm", "ShippingCond", "AddField1",
+            "UnitPrice", "ExtPrice", "DlvDate", "Plant", "Storageloc", "ItmCat", "IncoTerm", "ShippingCond", "AddField1",
             "AddField2", "AddField3", "AddField4", "AddField5", "Size", "Pallet", "CustPo", "ShipTo",
             "SapPriceInd", "SalesDocType", "SalesOrg", "SoldTo", "PODate", "DistChannel", "Division",
             "InternalOrder", "CostCenter", "CFOPCode", "TaxLawICMS", "TaxLawIPI", "ISSTaxLaw", "COFINSTaxLaw",
             "PISTaxLaw", "AssetNumber", "SerialNumber", "SDTaxCode", "POItemNo",
         ], list(item.keys()))
         self.assertEqual({
-            "OCRItemno": "10", "Material": "181016", "Quantity": "7", "Uom": "CS", "Plant": "1000",
+            "OCRItemno": "10", "Material": "181016", "Quantity": "7", "Uom": "CS", "Plant": "1000", "Storageloc": "1000",
             "ItmCat": "ZBAS", "IncoTerm": "CIF", "ShippingCond": "04", "CustPo": "R2938274", "ShipTo": "4023350",
             "SalesDocType": "ZBAS", "SalesOrg": "3000", "SoldTo": "15162", "DistChannel": "10", "Division": "10",
             "InternalOrder": "401914", "CFOPCode": "6908/AA", "TaxLawICMS": "M41", "TaxLawIPI": "MP9",
             "COFINSTaxLaw": "C49", "PISTaxLaw": "P49", "AssetNumber": "85046178", "SerialNumber": "O84250860445",
             "SDTaxCode": "I3", "CostCenter": "", "ISSTaxLaw": "", "POItemNo": "",
-        }, {k: item[k] for k in ["OCRItemno", "Material", "Quantity", "Uom", "Plant", "ItmCat", "IncoTerm",
+        }, {k: item[k] for k in ["OCRItemno", "Material", "Quantity", "Uom", "Plant", "Storageloc", "ItmCat", "IncoTerm",
                                  "ShippingCond", "CustPo", "ShipTo", "SalesDocType", "SalesOrg", "SoldTo",
                                  "DistChannel", "Division", "InternalOrder", "CFOPCode", "TaxLawICMS",
                                  "TaxLawIPI", "COFINSTaxLaw", "PISTaxLaw", "AssetNumber", "SerialNumber",
