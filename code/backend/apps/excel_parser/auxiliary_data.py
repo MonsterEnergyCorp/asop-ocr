@@ -574,6 +574,7 @@ regional_options[POS_ASOP_BRAZIL] = {
     "podoctype": "EXCEL",
     "asop_no": "0000000000",
     "record_fields": {"AddField1": "MASSPOSBRAZIL"},   # template indicator, set on the header, not on items
+    "one_record_per_sheet": True,                      # all rows of the sheet are line items of one record
     "date_fields": ["PODate", "DlvDate"],
     "excel_serial_dates": True,                        # Request Delivery Date is stored as an Excel serial number
     "price_order_types": ["ZORP"],                     # UnitPrice is only sent for ZORP orders
