@@ -232,8 +232,9 @@ class PosAsopMassOrderTests(unittest.TestCase):
              mock.patch.object(handler, "read_file_from_object_store", return_value=content):
             result = handler.excel_parsing_flow("file-4")
 
-        self.assertEqual({"R2938274", "R2938275"}, set(result))
+        self.assertEqual({"R2938274"}, set(result))  # one record for the sheet, every row is a line item
         record = result["R2938274"]
+        self.assertEqual(["10", "20"], [i["OCRItemno"] for i in record["NavHeadToItem"]])
         self.assertEqual({"AsopNo": "0000000000", "Region": "EMEA", "AddField1": "MASSPOSALL", "Podoctype": "EXCEL"},
                          {k: record[k] for k in ["AsopNo", "Region", "AddField1", "Podoctype"]})
         item = record["NavHeadToItem"][0]
@@ -256,7 +257,7 @@ class PosAsopMassOrderTests(unittest.TestCase):
              "ShipStreet2", "ShipState", "ShipZip", "ShipCountry", "ShipInst", "Currency", "InternalOrder",
              "CostCenter", "POItemNo"],
             list(item.keys()))
-        second = result["R2938275"]["NavHeadToItem"][0]
+        second = record["NavHeadToItem"][1]
         self.assertEqual("", second["IncoTerm"])
         self.assertEqual("107310", second["Material"])
         self.assertEqual(["file-4"], _erp_calls)
@@ -306,8 +307,9 @@ class PosAsopMassOrderBrazilTests(unittest.TestCase):
 
     def test_header_carries_the_template_indicator_and_items_follow_the_sample(self):
         result = self._parse(self._workbook_bytes())
-        self.assertEqual({"R2938274", "R2938275"}, set(result))
+        self.assertEqual({"R2938274"}, set(result))  # one record for the sheet, every row is a line item
         record = result["R2938274"]
+        self.assertEqual(["10", "20"], [i["OCRItemno"] for i in record["NavHeadToItem"]])
         self.assertEqual(
             ["AsopNo", "Region", "AddField1", "Podoctype", "NavHeadToItem", "NavHeadtoMeta"], list(record.keys()))
         self.assertEqual({"AsopNo": "0000000000", "Region": "EMEA", "AddField1": "MASSPOSBRAZIL", "Podoctype": "EXCEL"},
@@ -334,7 +336,7 @@ class PosAsopMassOrderBrazilTests(unittest.TestCase):
                                  "DistChannel", "Division", "InternalOrder", "CFOPCode", "TaxLawICMS",
                                  "TaxLawIPI", "COFINSTaxLaw", "PISTaxLaw", "AssetNumber", "SerialNumber",
                                  "SDTaxCode", "CostCenter", "ISSTaxLaw", "POItemNo"]})
-        second = result["R2938275"]["NavHeadToItem"][0]
+        second = record["NavHeadToItem"][1]
         self.assertEqual(("ZBAS", "CIF"), (second["ItmCat"], second["IncoTerm"]))  # blank in the file: template defaults
         self.assertEqual(["file-brazil"], _erp_calls)
 
