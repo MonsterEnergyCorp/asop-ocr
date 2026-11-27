@@ -513,6 +513,7 @@ regional_options[POS_ASOP] = {
     "asop_no": "0000000000",
     "record_fields": {"AddField1": "MASSPOSALL"},      # template indicator, set on the header
     "one_record_per_sheet": True,                      # all rows of the sheet are line items of one record
+    "item_no_fixed": "10",                             # every line carries OCRItemno 10, as in the agreed sample
     "date_fields": ["PODate", "DlvDate"],
     # column name (see label_key in the handler) -> ERP field
     "flat_columns": {
@@ -576,6 +577,7 @@ regional_options[POS_ASOP_BRAZIL] = {
     "asop_no": "0000000000",
     "record_fields": {"AddField1": "MASSPOSBRAZIL"},   # template indicator, set on the header, not on items
     "one_record_per_sheet": True,                      # all rows of the sheet are line items of one record
+    "item_no_fixed": "10",                             # every line carries OCRItemno 10, as in the agreed sample
     "date_fields": ["PODate", "DlvDate"],
     "excel_serial_dates": True,                        # Request Delivery Date is stored as an Excel serial number
     "price_order_types": ["ZORP"],                     # UnitPrice is only sent for ZORP orders

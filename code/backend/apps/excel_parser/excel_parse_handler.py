@@ -353,7 +353,7 @@ def extract_flat_table(sheet, profile, sheet_name, hana_data):
             "NavHeadToItem": [],
             "NavHeadtoMeta": add_erp_metadata_information(hana_data),
         })
-        item["OCRItemno"] = str((len(record["NavHeadToItem"]) + 1) * 10)
+        item["OCRItemno"] = options.get("item_no_fixed") or str((len(record["NavHeadToItem"]) + 1) * 10)
         record["NavHeadToItem"].append(item)
     return records
 

@@ -234,7 +234,7 @@ class PosAsopMassOrderTests(unittest.TestCase):
 
         self.assertEqual({"R2938274"}, set(result))  # one record for the sheet, every row is a line item
         record = result["R2938274"]
-        self.assertEqual(["10", "20"], [i["OCRItemno"] for i in record["NavHeadToItem"]])
+        self.assertEqual(["10", "10"], [i["OCRItemno"] for i in record["NavHeadToItem"]])
         self.assertEqual({"AsopNo": "0000000000", "Region": "EMEA", "AddField1": "MASSPOSALL", "Podoctype": "EXCEL"},
                          {k: record[k] for k in ["AsopNo", "Region", "AddField1", "Podoctype"]})
         item = record["NavHeadToItem"][0]
@@ -309,7 +309,7 @@ class PosAsopMassOrderBrazilTests(unittest.TestCase):
         result = self._parse(self._workbook_bytes())
         self.assertEqual({"R2938274"}, set(result))  # one record for the sheet, every row is a line item
         record = result["R2938274"]
-        self.assertEqual(["10", "20"], [i["OCRItemno"] for i in record["NavHeadToItem"]])
+        self.assertEqual(["10", "10"], [i["OCRItemno"] for i in record["NavHeadToItem"]])
         self.assertEqual(
             ["AsopNo", "Region", "AddField1", "Podoctype", "NavHeadToItem", "NavHeadtoMeta"], list(record.keys()))
         self.assertEqual({"AsopNo": "0000000000", "Region": "EMEA", "AddField1": "MASSPOSBRAZIL", "Podoctype": "EXCEL"},
